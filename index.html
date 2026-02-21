@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desi Arms — Internal Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #111113; --surface: #1a1a1e; --surface-alt: #222228;
+    --border: #2e2e35; --text: #e8e8ec; --text-muted: #8e8e9a;
+    --accent: #d4a04a; --cerakote-accent: #4a9ed4; --green: #5b9e6f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* LOGIN */
+  .login-screen { text-align: center; max-width: 380px; width: 100%; padding: 2rem; }
+  .login-screen .brand {
+    font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.8rem;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.25rem;
+  }
+  .login-screen .tagline { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem; }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 2rem 1.75rem;
+  }
+  .login-box label {
+    display: block; font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+    text-align: left; margin-bottom: 0.5rem;
+  }
+  .login-box input[type="password"] {
+    width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 5px;
+    background: var(--bg); color: var(--text); font-family: 'Source Sans 3', sans-serif;
+    font-size: 1rem; outline: none; transition: border-color 0.2s;
+  }
+  .login-box input:focus { border-color: var(--accent); }
+  .login-box .submit-btn {
+    width: 100%; margin-top: 1rem; padding: 0.75rem; background: var(--accent); color: var(--bg);
+    border: none; border-radius: 5px; font-family: 'Oswald', sans-serif; font-weight: 600;
+    font-size: 0.9rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .submit-btn:hover { opacity: 0.9; }
+  .error-msg { color: #e74c4c; font-size: 0.82rem; margin-top: 0.75rem; display: none; }
+  .remember-row { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; }
+  .remember-row input { accent-color: var(--accent); }
+  .remember-row label {
+    font-size: 0.8rem; color: var(--text-muted); text-transform: none;
+    letter-spacing: normal; font-family: 'Source Sans 3', sans-serif; font-weight: 400; margin-bottom: 0;
+  }
+
+  /* DASHBOARD */
+  .dashboard { display: none; width: 100%; min-height: 100vh; }
+  .dash-header {
+    background: var(--surface); border-bottom: 2px solid var(--accent);
+    padding: 1.5rem 2rem; display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 1rem;
+  }
+  .dash-header h1 {
+    font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 1.75rem;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+  }
+  .dash-header .subtitle { font-size: 0.85rem; color: var(--text-muted); }
+  .logout-btn {
+    background: none; border: 1px solid var(--border); color: var(--text-muted);
+    font-family: 'Oswald', sans-serif; font-size: 0.75rem; font-weight: 500;
+    padding: 0.4rem 0.8rem; border-radius: 4px; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.06em; transition: all 0.2s;
+  }
+  .logout-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .dash-container { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+  .dash-container h2 {
+    font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 1.1rem;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 1.25rem;
+  }
+  .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+  .tool-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1.5rem; cursor: pointer; transition: all 0.2s; text-decoration: none; color: inherit;
+    display: block;
+  }
+  .tool-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .tool-card .card-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+  .tool-card h3 {
+    font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 1rem;
+    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.35rem;
+  }
+  .tool-card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+  .tool-card .status-badge {
+    display: inline-block; font-family: 'Oswald', sans-serif; font-size: 0.65rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em; padding: 0.15rem 0.5rem; border-radius: 3px;
+    margin-top: 0.75rem;
+  }
+  .status-live { background: rgba(91,158,111,0.2); color: var(--green); }
+  .status-coming { background: rgba(201,168,76,0.2); color: #c9a84c; }
+
+  @media (max-width: 640px) {
+    .login-screen { padding: 1.25rem; }
+    .dash-header { padding: 1rem; }
+    .dash-header h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="brand">Desi Arms</div>
+  <div class="tagline">Internal Tools</div>
+  <div class="login-box">
+    <label for="passInput">Access Code</label>
+    <input type="password" id="passInput" placeholder="Enter access code" autofocus>
+    <div class="remember-row">
+      <input type="checkbox" id="rememberMe">
+      <label for="rememberMe">Remember this device for 30 days</label>
+    </div>
+    <button class="submit-btn" onclick="tryLogin()">Enter</button>
+    <div class="error-msg" id="errorMsg">Incorrect access code. Try again.</div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="dashboard" id="dashboard">
+  <div class="dash-header">
+    <div>
+      <h1>Desi Arms <span style="color:var(--text); font-weight:400;">— Internal</span></h1>
+      <div class="subtitle">Staff Tools &amp; Resources</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+  <div class="dash-container">
+    <h2>Tools</h2>
+    <div class="tool-grid">
+
+      <a href="pricing.html" class="tool-card">
+        <div class="card-icon">💰</div>
+        <h3>Price List &amp; Quoting</h3>
+        <p>Laser engraving &amp; Cerakote pricing. Editable rates, markup calculator, quick reference for customer quotes.</p>
+        <span class="status-badge status-live">Live</span>
+      </a>
+
+      <div class="tool-card" style="opacity:0.5; cursor:default;">
+        <div class="card-icon">📋</div>
+        <h3>Quote Builder</h3>
+        <p>Select services, add line items, auto-calculate totals with markup. Generate printable quotes for customers.</p>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+
+      <div class="tool-card" style="opacity:0.5; cursor:default;">
+        <div class="card-icon">🔗</div>
+        <h3>Customer Requests</h3>
+        <p>View and manage incoming customization requests. Link to quote builder for fast turnaround.</p>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  /*
+   * AUTH - Simple hash-based password gate.
+   * Default password: desiarms2025
+   * To change: update PASS_HASH below. Generate a new hash by running in browser console:
+   *   crypto.subtle.digest('SHA-256', new TextEncoder().encode('YOUR_NEW_PASSWORD'))
+   *     .then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join(''))
+   *     .then(console.log)
+   */
+  const PASS_HASH = 'b0f2c5879ed65e575f1feb6faab0dd1ee4154cd15503e3a9e1db3cadf8e3b389';
+
+  async function hashPass(pass) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+    return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function tryLogin() {
+    const pass = document.getElementById('passInput').value;
+    const hash = await hashPass(pass);
+    if (hash === PASS_HASH) {
+      sessionStorage.setItem('da_auth', hash);
+      if (document.getElementById('rememberMe').checked) {
+        localStorage.setItem('da_auth', hash);
+        localStorage.setItem('da_auth_exp', Date.now() + 30 * 24 * 60 * 60 * 1000);
+      }
+      showDashboard();
+    } else {
+      const err = document.getElementById('errorMsg');
+      err.style.display = 'block';
+      document.getElementById('passInput').value = '';
+      document.getElementById('passInput').focus();
+    }
+  }
+
+  function showDashboard() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.body.style.display = 'block';
+  }
+
+  function logout() {
+    sessionStorage.removeItem('da_auth');
+    localStorage.removeItem('da_auth');
+    localStorage.removeItem('da_auth_exp');
+    location.reload();
+  }
+
+  function checkAuth() {
+    if (sessionStorage.getItem('da_auth') === PASS_HASH) return true;
+    const stored = localStorage.getItem('da_auth');
+    const exp = localStorage.getItem('da_auth_exp');
+    if (stored === PASS_HASH && exp && Date.now() < parseInt(exp)) {
+      sessionStorage.setItem('da_auth', stored);
+      return true;
+    }
+    localStorage.removeItem('da_auth');
+    localStorage.removeItem('da_auth_exp');
+    return false;
+  }
+
+  // Enter key to submit
+  document.getElementById('passInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') tryLogin();
+  });
+
+  // Check on load
+  if (checkAuth()) showDashboard();
+</script>
+</body>
+</html>
