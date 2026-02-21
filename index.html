@@ -173,7 +173,7 @@
    *     .then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join(''))
    *     .then(console.log)
    */
-  const PASS_HASH = 'b0f2c5879ed65e575f1feb6faab0dd1ee4154cd15503e3a9e1db3cadf8e3b389';
+  const PASS_HASH = '9a9e2b3cb135c69090d3658ddd0a93231acb6f6099affcb210934a345edc22ac';
 
   async function hashPass(pass) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
