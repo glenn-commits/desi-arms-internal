@@ -436,7 +436,7 @@ async function lookupPricing(){
   btn.disabled=true;spinner.style.display="block";label.textContent="Searching market data…";
   const prompt=`You are a used firearms market pricing expert. Search for current market prices for this firearm and return ONLY a JSON object.\n\nFirearm:\n- Category: ${category}\n- Make/Brand: ${make}\n- Model: ${model}${caliber?"\n- Caliber: "+caliber:""}${details?"\n- Details: "+details:""}\n- Condition: ${selectedCondition.label} (${selectedCondition.score}/10)\n- Accessories included: ${accStr}${extras?"\n- Notes: "+extras:""}\n\nSearch GunBroker, Guns.com, Armslist, and recent auction results. Return ONLY this JSON (no other text, no markdown):\n{"marketLow":<number>,"marketMid":<number>,"marketHigh":<number>,"dataQuality":" (estimated)","summary":"<1-2 sentence summary>","notes":"<pricing notes>"}`;
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:prompt}]})});
+    const resp=await fetch("https://corsproxy.io/?https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01","x-api-key":""},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:prompt}]})});
     const data=await resp.json();
     let txt="";for(const b of(data.content||[])){if(b.type==="text")txt=b.text;}
     txt=txt.replace(/```json|```/g,"").trim();
