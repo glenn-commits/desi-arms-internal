@@ -379,8 +379,10 @@
   const PASS_HASH = '9a9e2b3cb135c69090d3658ddd0a93231acb6f6099affcb210934a345edc22ac';
   function checkAuth() {
     if (sessionStorage.getItem('da_auth') === PASS_HASH) return true;
+    if (sessionStorage.getItem('da_auth') === '1') return true;
     const s = localStorage.getItem('da_auth');
     const e = localStorage.getItem('da_auth_exp');
+    if (s === '1' && e && Date.now() < parseInt(e)) { sessionStorage.setItem('da_auth', '1'); return true; }
     if (s === PASS_HASH && e && Date.now() < parseInt(e)) { sessionStorage.setItem('da_auth', s); return true; }
     return false;
   }
