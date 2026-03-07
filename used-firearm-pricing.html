@@ -246,6 +246,12 @@
     #app { display: block !important; padding: 0; }
     .sliders-grid { display: none; }
   }
+  .back-link {
+    color: var(--text-muted); text-decoration: none; font-family: 'Oswald', sans-serif;
+    font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em;
+    border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 4px; transition: all 0.2s;
+  }
+  .back-link:hover { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -270,6 +276,9 @@
       <div class="tagline">— We've Got Your Six —</div>
     </div>
     <div class="header-badge">🔒 Used Firearm Pricing · Staff Only</div>
+    <div class="header-right">
+      <a href="index.html" class="back-link">← Dashboard</a>
+    </div>
   </header>
 
   <div class="section-label">01 — Firearm Details</div>
@@ -436,10 +445,14 @@ async function lookupPricing(){
   btn.disabled=true;spinner.style.display="block";label.textContent="Searching market data…";
   const prompt=`You are a used firearms market pricing expert. Estimate current used market prices for this firearm based on your training knowledge of GunBroker, Guns.com, and Armslist pricing. Return ONLY a JSON object.\n\nFirearm:\n- Category: ${category}\n- Make/Brand: ${make}\n- Model: ${model}${caliber?"\n- Caliber: "+caliber:""}${details?"\n- Details: "+details:""}\n- Condition: ${selectedCondition.label} (${selectedCondition.score}/10)\n- Accessories included: ${accStr}${extras?"\n- Notes: "+extras:""}\n\nBased on typical market values for this firearm type, condition, and accessories. Return ONLY this JSON (no other text, no markdown):\n{"marketLow":<number>,"marketMid":<number>,"marketHigh":<number>,"dataQuality":" (estimated)","summary":"<1-2 sentence summary>","notes":"<pricing notes>"}`;
   try{
-    const resp=await fetch("https://corsproxy.io/?https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01","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":""},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+    const resp=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01","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":""},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})});
+    if(!resp.ok){const errText=await resp.text();throw new Error("API error "+resp.status+": "+errText.slice(0,200));}
     const data=await resp.json();
-    let txt="";for(const b of(data.content||[])){if(b.type==="text")txt=b.text;}
-    txt=txt.replace(/```json|```/g,"").trim();
+    if(data.error){throw new Error("API error: "+data.error.message);}
+    let txt="";for(const b of(data.content||[])){if(b.type==="text")txt+=b.text;}
+    txt=txt.replace(/```json
+?|```/g,"").trim();
+    if(!txt){throw new Error("Empty response from API");}
     const r=JSON.parse(txt);
     marketMid=r.marketMid;
     document.getElementById("mktLow").textContent=fmt(r.marketLow);document.getElementById("mktMid").textContent=fmt(r.marketMid);document.getElementById("mktHigh").textContent=fmt(r.marketHigh);
