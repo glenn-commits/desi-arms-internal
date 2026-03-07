@@ -398,6 +398,12 @@
 <script>
 const HASH = "8e2b94e42f83be9f11b96960ec3c3a0e8fd3d2ef09d25f4a2c0c89ce7a4e0f6c";
 async function sha256(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");}
+(function(){
+  const ss=sessionStorage.getItem('da_auth');
+  if(ss==='1'||ss===HASH){document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';return;}
+  const ls=localStorage.getItem('da_auth'),exp=localStorage.getItem('da_auth_exp');
+  if((ls==='1'||ls===HASH)&&exp&&Date.now()<parseInt(exp)){document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';}
+})();
 document.getElementById("pwBtn").onclick=checkPw;
 document.getElementById("pwInput").addEventListener("keydown",e=>{if(e.key==="Enter")checkPw();});
 async function checkPw(){const h=await sha256(document.getElementById("pwInput").value);if(h===HASH){document.getElementById("lockScreen").style.display="none";document.getElementById("app").style.display="block";}else{document.getElementById("pwError").style.display="block";document.getElementById("pwInput").value="";}}
