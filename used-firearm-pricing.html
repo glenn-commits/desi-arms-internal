@@ -421,7 +421,10 @@ async function lookupPricing(){
   btn.disabled=true;spinner.style.display="block";label.textContent="Searching market data…";
   const prompt=`You are a used firearms market pricing expert. Estimate current used market prices for this firearm based on your training knowledge of GunBroker, Guns.com, and Armslist pricing. Return ONLY a JSON object.\n\nFirearm:\n- Category: ${category}\n- Make/Brand: ${make}\n- Model: ${model}${caliber?"\n- Caliber: "+caliber:""}${details?"\n- Details: "+details:""}\n- Condition: ${selectedCondition.label} (${selectedCondition.score}/10)\n- Accessories included: ${accStr}${extras?"\n- Notes: "+extras:""}\n\nBased on typical market values for this firearm type, condition, and accessories. Return ONLY this JSON (no other text, no markdown):\n{"marketLow":<number>,"marketMid":<number>,"marketHigh":<number>,"dataQuality":" (estimated)","summary":"<1-2 sentence summary>","notes":"<pricing notes>"}`;
   try{
-    const resp=await fetch("https://corsproxy.io/?"+encodeURIComponent("https://api.anthropic.com/v1/messages"),{
+    const apiUrl = "https://api.anthropic.com/v1/messages";
+    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(apiUrl);
+    
+    const resp=await fetch(proxyUrl,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
