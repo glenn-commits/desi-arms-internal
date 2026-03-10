@@ -405,31 +405,7 @@
 </div>
 
 <script>
-const HASH = "8e2b94e42f83be9f11b96960ec3c3a0e8fd3d2ef09d25f4a2c0c89ce7a4e0f6c";
-async function sha256(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");}
-(function(){
-  const ss=sessionStorage.getItem('da_auth');
-  if(ss==='1'||ss===HASH){document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';return;}
-  const ls=localStorage.getItem('da_auth'),exp=localStorage.getItem('da_auth_exp');
-  if((ls==='1'||ls===HASH)&&exp&&Date.now()<parseInt(exp)){document.getElementById('lockScreen').style.display='none';document.getElementById('app').style.display='block';}
-})();
-document.getElementById("pwBtn").onclick=checkPw;
-document.getElementById("pwInput").addEventListener("keydown",e=>{if(e.key==="Enter")checkPw();});
-async function checkPw(){
-  const h=await sha256(document.getElementById("pwInput").value);
-  if(h===HASH){
-    sessionStorage.setItem('da_auth','1');
-    if(document.getElementById('rememberPw') && document.getElementById('rememberPw').checked){
-      localStorage.setItem('da_auth','1');
-      localStorage.setItem('da_auth_exp', Date.now() + 30*24*60*60*1000);
-    }
-    document.getElementById("lockScreen").style.display="none";
-    document.getElementById("app").style.display="block";
-  } else {
-    document.getElementById("pwError").style.display="block";
-    document.getElementById("pwInput").value="";
-  }
-}
+// Password protection removed for testing
 
 let selectedCondition=null,marketMid=null;
 function selectCondition(el){document.querySelectorAll(".cond-btn").forEach(b=>b.classList.remove("active"));el.classList.add("active");selectedCondition={label:el.dataset.cond,score:parseInt(el.dataset.score)};}
@@ -445,13 +421,20 @@ async function lookupPricing(){
   btn.disabled=true;spinner.style.display="block";label.textContent="Searching market data…";
   const prompt=`You are a used firearms market pricing expert. Estimate current used market prices for this firearm based on your training knowledge of GunBroker, Guns.com, and Armslist pricing. Return ONLY a JSON object.\n\nFirearm:\n- Category: ${category}\n- Make/Brand: ${make}\n- Model: ${model}${caliber?"\n- Caliber: "+caliber:""}${details?"\n- Details: "+details:""}\n- Condition: ${selectedCondition.label} (${selectedCondition.score}/10)\n- Accessories included: ${accStr}${extras?"\n- Notes: "+extras:""}\n\nBased on typical market values for this firearm type, condition, and accessories. Return ONLY this JSON (no other text, no markdown):\n{"marketLow":<number>,"marketMid":<number>,"marketHigh":<number>,"dataQuality":" (estimated)","summary":"<1-2 sentence summary>","notes":"<pricing notes>"}`;
   try{
-    const resp=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","anthropic-version":"2023-06-01","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":""},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})});
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "anthropic-version":"2023-06-01",
+        "x-api-key":"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"
+      },
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})
+    });
     if(!resp.ok){const errText=await resp.text();throw new Error("API error "+resp.status+": "+errText.slice(0,200));}
     const data=await resp.json();
     if(data.error){throw new Error("API error: "+data.error.message);}
     let txt="";for(const b of(data.content||[])){if(b.type==="text")txt+=b.text;}
-    txt=txt.replace(/```json
-?|```/g,"").trim();
+    txt=txt.replace(/```json\n?|```/g,"").trim();
     if(!txt){throw new Error("Empty response from API");}
     const r=JSON.parse(txt);
     marketMid=r.marketMid;
@@ -475,6 +458,10 @@ function updatePrices(){
 }
 
 function resetTool(){document.getElementById("category").value="";document.getElementById("make").value="";document.getElementById("model").value="";document.getElementById("caliber").value="";document.getElementById("details").value="";document.getElementById("extraNotes").value="";document.querySelectorAll(".cond-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".check-item").forEach(l=>{l.classList.remove("checked");l.querySelector("input").checked=false;});selectedCondition=null;marketMid=null;document.getElementById("resultsSection").style.display="none";document.getElementById("errorBox").style.display="none";window.scrollTo({top:0,behavior:"smooth"});}
+
+// Auto-show app on load (no password)
+document.getElementById('lockScreen').style.display='none';
+document.getElementById('app').style.display='block';
 </script>
 </body>
 </html>
