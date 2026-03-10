@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Desi Arms — Time Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary:       #1a2a3a;
+      --primary-light: #2e4057;
+      --accent:        #D32434;
+      --accent-hover:  #a01c28;
+      --red-accent:    #b22234;
+      --bg:            #f5f2ed;
+      --card-bg:       #ffffff;
+      --text:          #2c2c2c;
+      --text-muted:    #6b7280;
+      --border:        #d4cfc7;
+      --border-focus:  #D32434;
+      --error:         #c0392b;
+      --input-bg:      #faf9f7;
+      --shadow:        0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg:     0 10px 40px rgba(0,0,0,0.08), 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C927A' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── Header ── */
+    .form-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .logo-wrapper { margin-bottom: 6px; }
+    .logo-wrapper img { max-width: 260px; height: auto; }
+    .logo-tagline {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .red-rule {
+      width: 60px; height: 3px;
+      background: var(--accent);
+      margin: 12px auto;
+      border-radius: 2px;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* ── Layout grid ── */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 860px) { .app-grid { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    /* ── Section header ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 22px 28px 16px;
+      border-bottom: 2px solid var(--bg);
+    }
+    .section-number {
+      width: 30px; height: 30px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--primary);
+    }
+
+    /* ── Form body ── */
+    .form-body { padding: 20px 28px 28px; }
+
+    .field-group { margin-bottom: 18px; }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 500px) { .field-row { grid-template-columns: 1fr; } }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-light);
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    label .req { color: var(--red-accent); margin-left: 2px; }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--input-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(211,36,52,0.12);
+      background: #fff;
+    }
+    input.invalid, select.invalid, textarea.invalid {
+      border-color: var(--error);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    select {
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.5; }
+
+    /* Coming soon block */
+    .coming-soon-block {
+      background: linear-gradient(135deg, #faf8f4 0%, #f5f0e8 100%);
+      border: 1.5px dashed rgba(211,36,52,0.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 4px;
+    }
+    .coming-soon-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-hover);
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 12px;
+    }
+    .coming-soon-block .disabled-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      opacity: 0.4; pointer-events: none; margin-bottom: 10px;
+    }
+    .coming-soon-block .disabled-single {
+      opacity: 0.4; pointer-events: none;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%;
+      padding: 14px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 16px rgba(211,36,52,0.25); }
+    .btn-primary:active { transform: scale(0.985); }
+
+    .btn-secondary {
+      padding: 10px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--primary-light);
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+
+    .btn-danger {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-danger:hover { background: rgba(211,36,52,0.08); color: var(--accent); }
+
+    /* ── Manage employees modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(26,42,58,0.5);
+      backdrop-filter: blur(3px);
+      z-index: 500;
+      display: none; align-items: center; justify-content: center;
+      animation: fadeIn 0.25s ease;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      width: 380px;
+      padding: 28px;
+      display: flex; flex-direction: column; gap: 16px;
+      animation: slideUp 0.3s ease;
+    }
+    .modal-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--primary);
+    }
+    .emp-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+    .emp-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+    }
+    .emp-row span { font-size: 14px; font-weight: 500; color: var(--text); }
+    .add-emp-row { display: flex; gap: 8px; }
+    .add-emp-row input { flex: 1; }
+    .add-emp-btn {
+      padding: 11px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 700;
+      color: #fff; background: var(--primary);
+      border: none; border-radius: 10px; cursor: pointer;
+      white-space: nowrap; transition: background 0.15s;
+    }
+    .add-emp-btn:hover { background: var(--primary-light); }
+    .modal-footer { display: flex; justify-content: flex-end; }
+
+    /* ── Log pane ── */
+    .log-card { display: flex; flex-direction: column; }
+    .log-top {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 28px 16px;
+      border-bottom: 2px solid var(--bg);
+      flex-wrap: wrap; gap: 10px;
+    }
+    .log-title-block { display: flex; flex-direction: column; gap: 3px; }
+    .log-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 19px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase; color: var(--primary);
+    }
+    .log-subtitle { font-size: 12px; color: var(--text-muted); }
+
+    .log-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-select {
+      padding: 7px 28px 7px 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 500;
+      color: var(--text-muted);
+      background: var(--input-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      outline: none; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      transition: border-color 0.15s;
+    }
+    .filter-select:focus { border-color: var(--border-focus); color: var(--text); }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--bg); }
+    th {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
+      padding: 10px 16px; text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+    td {
+      font-size: 13px; padding: 12px 16px;
+      border-bottom: 1px solid rgba(212,207,199,0.5);
+      color: var(--text); vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(245,242,237,0.7); }
+
+    .td-employee { font-weight: 600; color: var(--primary); }
+    .td-hours { font-weight: 700; color: var(--accent); }
+    .td-date { color: var(--text-muted); font-size: 12px; }
+    .td-project { color: var(--primary-light); font-size: 12px; }
+    .td-notes { color: var(--text-muted); font-size: 12px; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .td-actions { text-align: right; }
+
+    .empty-state {
+      text-align: center; padding: 50px 24px;
+    }
+    .empty-icon {
+      width: 48px; height: 48px;
+      background: var(--bg);
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .empty-state p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── Summary bar ── */
+    .summary-bar {
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #1a2a3a 0%, #2e4057 100%);
+      border-radius: 0 0 16px 16px;
+      display: flex; gap: 0; flex-wrap: wrap;
+    }
+    .stat {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 4px 20px 4px 0;
+      border-right: 1px solid rgba(255,255,255,0.12);
+      margin-right: 20px;
+    }
+    .stat:last-child { border-right: none; margin-right: 0; }
+    .stat-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: rgba(255,255,255,0.5);
+    }
+    .stat-value { font-size: 1.15rem; font-weight: 700; color: #fff; }
+    .stat-value.red { color: #ff6b7a; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px; font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none; z-index: 999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Success overlay ── */
+    .success-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(26,42,58,0.55);
+      backdrop-filter: blur(4px);
+      z-index: 100; align-items: center; justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    .success-overlay.show { display: flex; }
+    .success-card {
+      background: var(--card-bg);
+      border-radius: 20px; padding: 48px 40px;
+      text-align: center; max-width: 400px; margin: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: slideUp 0.4s ease;
+    }
+    .success-icon {
+      width: 60px; height: 60px; background: var(--accent);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; margin: 0 auto 18px;
+    }
+    .success-card h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 26px; font-weight: 700;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: var(--primary); margin-bottom: 10px;
+    }
+    .success-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 22px; }
+    .success-card button {
+      padding: 12px 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+      color: #fff; background: var(--accent); border: none;
+      border-radius: 10px; cursor: pointer; transition: background 0.2s;
+    }
+    .success-card button:hover { background: var(--accent-hover); }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    tr.new-row td { animation: fadeSlideIn 0.3s ease; }
+
+    .form-footer {
+      text-align: center; margin-top: 28px;
+      font-size: 12px; color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <!-- Header -->
+  <header class="form-header">
+    <div class="logo-wrapper">
+      <img src="https://glenn-commits.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.svg" onerror="this.src='https://glenn-commits.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.png'" alt="Desi Arms" style="max-width:260px;height:auto;"/>
+    </div>
+    <div class="logo-tagline">— We've Got Your Six —</div>
+    <div class="red-rule"></div>
+    <p class="page-subtitle">Internal Time Tracking — Log and manage employee hours</p>
+  </header>
+
+  <!-- App Grid -->
+  <div class="app-grid">
+
+    <!-- LEFT: Entry Form -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-number">1</div>
+        <div class="section-title">Log Hours</div>
+      </div>
+      <div class="form-body">
+
+        <div class="field-group">
+          <label for="sel-employee">Employee <span class="req">*</span></label>
+          <select id="sel-employee">
+            <option value="">— Select employee —</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="inp-date">Date <span class="req">*</span></label>
+            <input type="date" id="inp-date"/>
+          </div>
+          <div class="field-group">
+            <label for="inp-hours">Hours <span class="req">*</span></label>
+            <input type="number" id="inp-hours" placeholder="8.00" min="0.25" max="24" step="0.25"/>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="inp-project">Project / Code</label>
+          <input type="text" id="inp-project" placeholder="e.g. PROJ-001"/>
+        </div>
+
+        <div class="field-group">
+          <label for="inp-notes">Notes <span style="color:var(--text-muted);font-weight:400;text-transform:none;">(optional)</span></label>
+          <textarea id="inp-notes" placeholder="Brief description of work performed…"></textarea>
+        </div>
+
+        <!-- Coming Soon: Time In/Out -->
+        <div style="margin-bottom:18px;">
+          <div class="coming-soon-block">
+            <div class="coming-soon-label">
+              <svg style="width:12px;height:12px;fill:var(--accent-hover)" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              Coming Soon — Time In / Out &amp; Breaks
+            </div>
+            <div class="disabled-row">
+              <div class="field-group">
+                <label>Clock In</label>
+                <input type="time" placeholder="08:00" tabindex="-1"/>
+              </div>
+              <div class="field-group">
+                <label>Clock Out</label>
+                <input type="time" placeholder="17:00" tabindex="-1"/>
+              </div>
+            </div>
+            <div class="disabled-single field-group">
+              <label>Lunch / Break (hrs)</label>
+              <input type="number" placeholder="0.50" min="0" max="4" step="0.25" tabindex="-1"/>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="submitEntry()" style="margin-bottom:10px;">
+          <svg style="width:15px;height:15px;fill:#fff" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Log Entry
+        </button>
+        <button class="btn-secondary" style="width:100%;" onclick="openModal()">Manage Employees</button>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Log -->
+    <div class="card log-card">
+      <div class="log-top">
+        <div class="log-title-block">
+          <div class="log-title">Time Log</div>
+          <div class="log-subtitle" id="log-subtitle">Showing all entries</div>
+        </div>
+        <div class="log-controls">
+          <select class="filter-select" id="filter-employee" onchange="renderTable()">
+            <option value="">All Employees</option>
+          </select>
+          <select class="filter-select" id="filter-period" onchange="renderTable()">
+            <option value="">All Time</option>
+            <option value="this-week">This Week</option>
+            <option value="last-week">Last Week</option>
+            <option value="this-month">This Month</option>
+          </select>
+          <button class="btn-secondary" onclick="exportCSV()">↓ Export CSV</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Date</th>
+              <th>Hours</th>
+              <th>Project</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display:none;">
+          <div class="empty-icon">
+            <svg style="width:22px;height:22px;fill:var(--text-muted)" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" opacity=".3"/><circle cx="12" cy="12" r="9" fill="none" stroke="var(--border)" stroke-width="1.5"/><path d="M12 7v5l3 3" stroke="var(--text-muted)" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          </div>
+          <p>No entries yet.<br/>Use the form on the left to log hours.</p>
+        </div>
+      </div>
+
+      <div class="summary-bar">
+        <div class="stat">
+          <div class="stat-label">Total Entries</div>
+          <div class="stat-value" id="stat-entries">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Total Hours</div>
+          <div class="stat-value" id="stat-hours">0.00</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Avg / Entry</div>
+          <div class="stat-value red" id="stat-avg">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Employees</div>
+          <div class="stat-value" id="stat-emps">0</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="form-footer">
+    &copy; 2026 Desi Arms &nbsp;·&nbsp; <em>We've Got Your Six</em> &nbsp;·&nbsp; Internal Use Only
+  </div>
+</div>
+
+<!-- Manage Employees Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-title">Manage Employees</div>
+    <div class="emp-list" id="emp-list"></div>
+    <div class="add-emp-row">
+      <input type="text" id="new-emp-name" placeholder="Full name…"
+             onkeydown="if(event.key==='Enter') addEmployee()"/>
+      <button class="add-emp-btn" onclick="addEmployee()">Add</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-card">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" style="width:28px;height:28px;">
+        <path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2>Entry Logged</h2>
+    <p id="success-msg">Hours have been recorded successfully.</p>
+    <button onclick="document.getElementById('success-overlay').classList.remove('show')">Continue</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  const STATE_KEY = 'da_tt_entries_v1';
+  const EMP_KEY   = 'da_tt_employees_v1';
+
+  let entries   = JSON.parse(localStorage.getItem(STATE_KEY) || '[]');
+  let employees = JSON.parse(localStorage.getItem(EMP_KEY)   || '["Alice Johnson","Bob Martinez","Carol Smith","David Lee"]');
+
+  function save() {
+    localStorage.setItem(STATE_KEY, JSON.stringify(entries));
+    localStorage.setItem(EMP_KEY,   JSON.stringify(employees));
+  }
+
+  // Set today's date
+  document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
+
+  // Populate dropdowns
+  function populateSelects() {
+    const main   = document.getElementById('sel-employee');
+    const filter = document.getElementById('filter-employee');
+    const curMain   = main.value;
+    const curFilter = filter.value;
+    main.innerHTML   = '<option value="">— Select employee —</option>';
+    filter.innerHTML = '<option value="">All Employees</option>';
+    [...employees].sort().forEach(e => {
+      main.insertAdjacentHTML('beforeend',   `<option value="${e}">${e}</option>`);
+      filter.insertAdjacentHTML('beforeend', `<option value="${e}">${e}</option>`);
+    });
+    if (curMain)   main.value   = curMain;
+    if (curFilter) filter.value = curFilter;
+  }
+
+  // Submit
+  function submitEntry() {
+    const employee = document.getElementById('sel-employee').value;
+    const date     = document.getElementById('inp-date').value;
+    const hours    = parseFloat(document.getElementById('inp-hours').value);
+    const project  = document.getElementById('inp-project').value.trim();
+    const notes    = document.getElementById('inp-notes').value.trim();
+
+    if (!employee) { showToast('Please select an employee.', true); return; }
+    if (!date)     { showToast('Please enter a date.', true); return; }
+    if (!hours || hours <= 0) { showToast('Please enter valid hours.', true); return; }
+
+    entries.unshift({ id: Date.now(), employee, date, hours, project: project || '—', notes });
+    save();
+    renderTable();
+    resetForm();
+
+    const msg = document.getElementById('success-msg');
+    msg.textContent = `${hours.toFixed(2)}h logged for ${employee}.`;
+    document.getElementById('success-overlay').classList.add('show');
+  }
+
+  function resetForm() {
+    document.getElementById('sel-employee').value = '';
+    document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('inp-hours').value = '';
+    document.getElementById('inp-project').value = '';
+    document.getElementById('inp-notes').value = '';
+  }
+
+  // Filter & render
+  function getFiltered() {
+    let list = [...entries];
+    const emp  = document.getElementById('filter-employee').value;
+    const per  = document.getElementById('filter-period').value;
+    if (emp) list = list.filter(e => e.employee === emp);
+    if (per) {
+      const now = new Date();
+      const sw = d => { const x = new Date(d); x.setDate(x.getDate() - x.getDay()); x.setHours(0,0,0,0); return x; };
+      if (per === 'this-week')  { const s = sw(now); list = list.filter(e => new Date(e.date) >= s); }
+      if (per === 'last-week')  { const s = sw(now); const ls = new Date(s); ls.setDate(ls.getDate()-7); list = list.filter(e => { const d = new Date(e.date); return d >= ls && d < s; }); }
+      if (per === 'this-month') { const s = new Date(now.getFullYear(), now.getMonth(), 1); list = list.filter(e => new Date(e.date) >= s); }
+    }
+    return list;
+  }
+
+  function renderTable() {
+    const list  = getFiltered();
+    const tbody = document.getElementById('log-tbody');
+    const empty = document.getElementById('empty-state');
+    tbody.innerHTML = '';
+
+    if (!list.length) {
+      empty.style.display = 'block';
+    } else {
+      empty.style.display = 'none';
+      list.forEach(e => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="td-employee">${e.employee}</td>
+          <td class="td-date">${fmtDate(e.date)}</td>
+          <td class="td-hours">${e.hours.toFixed(2)}h</td>
+          <td class="td-project">${e.project}</td>
+          <td class="td-notes" title="${e.notes}">${e.notes || '<span style="opacity:.3">—</span>'}</td>
+          <td class="td-actions"><button class="btn-danger" onclick="deleteEntry(${e.id})">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    const total = list.reduce((s, e) => s + e.hours, 0);
+    const uniq  = new Set(list.map(e => e.employee)).size;
+    document.getElementById('stat-entries').textContent = list.length;
+    document.getElementById('stat-hours').textContent   = total.toFixed(2);
+    document.getElementById('stat-avg').textContent     = list.length ? (total/list.length).toFixed(2)+'h' : '—';
+    document.getElementById('stat-emps').textContent    = uniq;
+
+    const empF = document.getElementById('filter-employee').value;
+    const perF = document.getElementById('filter-period').value;
+    let sub = `${list.length} entr${list.length===1?'y':'ies'}`;
+    if (empF) sub += ` · ${empF.split(' ')[0]}`;
+    if (perF) sub += ` · ${perF.replace('-',' ')}`;
+    document.getElementById('log-subtitle').textContent = sub;
+  }
+
+  function deleteEntry(id) {
+    if (!confirm('Remove this entry?')) return;
+    entries = entries.filter(e => e.id !== id);
+    save(); renderTable();
+    showToast('Entry removed.');
+  }
+
+  // Employees modal
+  function openModal() { renderEmpList(); document.getElementById('modal-overlay').classList.add('open'); document.getElementById('new-emp-name').focus(); }
+  function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); populateSelects(); renderTable(); }
+  function handleOverlayClick(ev) { if (ev.target === document.getElementById('modal-overlay')) closeModal(); }
+
+  function renderEmpList() {
+    const list = document.getElementById('emp-list');
+    list.innerHTML = '';
+    [...employees].sort().forEach(name => {
+      list.insertAdjacentHTML('beforeend', `
+        <div class="emp-row">
+          <span>${name}</span>
+          <button class="btn-danger" onclick="removeEmployee('${name.replace(/'/g,"\\'")}')">✕</button>
+        </div>
+      `);
+    });
+    if (!employees.length) list.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px">No employees added yet.</p>';
+  }
+  function addEmployee() {
+    const inp = document.getElementById('new-emp-name');
+    const name = inp.value.trim();
+    if (!name) return;
+    if (employees.map(e=>e.toLowerCase()).includes(name.toLowerCase())) { showToast('Employee already exists.', true); return; }
+    employees.push(name); save(); inp.value = ''; renderEmpList();
+    showToast(`Added ${name.split(' ')[0]}.`);
+  }
+  function removeEmployee(name) {
+    if (!confirm(`Remove "${name}"? Past entries will remain.`)) return;
+    employees = employees.filter(e => e !== name); save(); renderEmpList();
+    showToast('Employee removed.');
+  }
+
+  // Export
+  function exportCSV() {
+    const list = getFiltered();
+    if (!list.length) { showToast('No entries to export.', true); return; }
+    const rows = [['Employee','Date','Hours','Project','Notes']];
+    list.forEach(e => rows.push([e.employee, e.date, e.hours, e.project, `"${(e.notes||'').replace(/"/g,'""')}"`]));
+    const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a'); a.href = url;
+    a.download = `desi-arms-timelog-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('CSV exported.');
+  }
+
+  // Helpers
+  function fmtDate(str) {
+    const d = new Date(str + 'T00:00:00');
+    return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  }
+
+  let toastTimer;
+  function showToast(msg, isWarn) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.borderLeftColor = isWarn ? 'var(--accent)' : 'var(--primary)';
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // Init
+  populateSelects();
+  renderTable();
+</script>
+</body>
+</html>
