@@ -421,12 +421,12 @@ async function lookupPricing(){
   btn.disabled=true;spinner.style.display="block";label.textContent="Searching market data…";
   const prompt=`You are a used firearms market pricing expert. Estimate current used market prices for this firearm based on your training knowledge of GunBroker, Guns.com, and Armslist pricing. Return ONLY a JSON object.\n\nFirearm:\n- Category: ${category}\n- Make/Brand: ${make}\n- Model: ${model}${caliber?"\n- Caliber: "+caliber:""}${details?"\n- Details: "+details:""}\n- Condition: ${selectedCondition.label} (${selectedCondition.score}/10)\n- Accessories included: ${accStr}${extras?"\n- Notes: "+extras:""}\n\nBased on typical market values for this firearm type, condition, and accessories. Return ONLY this JSON (no other text, no markdown):\n{"marketLow":<number>,"marketMid":<number>,"marketHigh":<number>,"dataQuality":" (estimated)","summary":"<1-2 sentence summary>","notes":"<pricing notes>"}`;
   try{
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+    const resp=await fetch("https://corsproxy.io/?url=https://api.anthropic.com/v1/messages",{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
         "anthropic-version":"2023-06-01",
-        "x-api-key":"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"
+        "x-api-key":"sk-ant-api03-pRhQfNR27Q4HRy4dsi5PV0fi4Cn3J9uJfhZSp3Nhp8ZDhjJUCN4poJukgleWhAZ14UUUWD5IOs3_X_sONKPsq_w-Yqx-owAA"
       },
       body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})
     });
@@ -445,7 +445,7 @@ async function lookupPricing(){
   }catch(err){errorBox.textContent="Error fetching market data: "+err.message;errorBox.style.display="block";}
   finally{btn.disabled=false;spinner.style.display="none";label.textContent="🔍 Look Up Market Price";}
 }
-
+  
 function fmt(n){return"$"+Math.round(n).toLocaleString();}
 function updatePrices(){
   if(!marketMid)return;
