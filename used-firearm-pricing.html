@@ -48,8 +48,12 @@
     padding: 40px 20px 60px;
   }
 
-  /* ── Header (matches time tracker) ── */
-  .form-header { text-align: center; margin-bottom: 36px; }
+  /* ── Header ── */
+  .form-header {
+    position: relative;
+    text-align: center;
+    margin-bottom: 36px;
+  }
   .logo-wrapper { margin-bottom: 6px; }
   .logo-wrapper img { max-width: 260px; height: auto; }
   .logo-tagline {
@@ -60,12 +64,12 @@
   .red-rule { width: 60px; height: 3px; background: var(--accent); margin: 12px auto; border-radius: 2px; }
   .page-subtitle { font-size: 14px; color: var(--text-muted); }
   .back-link {
-    display: inline-block; margin-top: 14px;
+    position: absolute; top: 0; right: 0;
     color: var(--text-muted); text-decoration: none;
     font-family: var(--head); font-size: 13px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.06em;
     border: 1px solid var(--border); padding: 7px 18px; border-radius: 6px;
-    transition: all 0.2s;
+    transition: all 0.2s; white-space: nowrap;
   }
   .back-link:hover { border-color: var(--accent); color: var(--accent); }
 
@@ -281,15 +285,15 @@
 
   <!-- ═══════════ HEADER ═══════════ -->
   <header class="form-header">
+    <a href="index.html" class="back-link">← Dashboard</a>
     <div class="logo-wrapper">
       <img src="https://glenn-commits.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.svg"
            onerror="this.src='https://glenn-commits.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.png'"
-           alt="Desi Arms" style="max-width:260px;height:auto;" />
+           alt="Desi Arms" />
     </div>
     <div class="logo-tagline">— We've Got Your Six —</div>
     <div class="red-rule"></div>
     <p class="page-subtitle">Used Firearm Pricing — Staff Only</p>
-    <a href="index.html" class="back-link">← Dashboard</a>
   </header>
 
   <!-- ═══════════ 01 — FIREARM DETAILS ═══════════ -->
