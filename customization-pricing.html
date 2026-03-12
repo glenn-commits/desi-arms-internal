@@ -26,24 +26,25 @@
   .auth-block a { color: var(--accent); }
 
   .header {
+    position: relative;
     background: var(--surface); border-bottom: 3px solid var(--accent);
-    padding: 1rem 2rem; display: flex; justify-content: space-between;
-    align-items: center; flex-wrap: wrap; gap: 1rem;
+    padding: 1.5rem 2rem;
+    text-align: center;
     box-shadow: 0 2px 10px rgba(0,0,0,0.06);
   }
-  .header-logo-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .header-logo-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
   .header-logo-wrap img { height: 52px; width: auto; max-width: 100%; object-fit: contain; flex-shrink: 0; mix-blend-mode: multiply; }
   .header-tagline { font-family: 'Oswald', sans-serif; font-size: 0.62rem; letter-spacing: 0.18em; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
   .header .subtitle { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
-  .header-right { display: flex; align-items: center; gap: 0.75rem; }
   .back-link {
+    position: absolute; top: 1.5rem; right: 2rem;
     color: var(--text-muted); text-decoration: none; font-family: 'Oswald', sans-serif;
     font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em;
     border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 4px; transition: all 0.2s;
   }
   .back-link:hover { border-color: var(--accent); color: var(--accent); }
 
-  .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; }
+  .tab-bar { display: flex; justify-content: center; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; }
   .tab-btn {
     font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 0.9rem;
     letter-spacing: 0.06em; text-transform: uppercase; background: none; border: none;
@@ -184,13 +185,11 @@
 <div id="mainApp" style="display:none;">
 
 <div class="header">
+  <a href="index.html" class="back-link">← Dashboard</a>
   <div class="header-logo-wrap">
     <img src="https://glenn-commits.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.svg" onerror="this.src='https://glenn-commits.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.png'" alt="Desi Arms">
     <div class="header-tagline">— We've Got Your Six —</div>
     <div class="subtitle">Click any engraving price to edit &nbsp;•&nbsp; Changes save automatically</div>
-  </div>
-  <div class="header-right">
-    <a href="index.html" class="back-link">← Dashboard</a>
   </div>
 </div>
 
