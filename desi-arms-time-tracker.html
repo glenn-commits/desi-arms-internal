@@ -654,15 +654,68 @@
 <div id="toast"></div>
 
 <script>
-  const STATE_KEY = 'da_tt_entries_v1';
-  const EMP_KEY   = 'da_tt_employees_v1';
+  // ═══════════════════════════════════════════════════════════
+  // CONFIGURATION — Same URL as your Task List Apps Script
+  // ═══════════════════════════════════════════════════════════
+  const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbyq2kEvu2gzyViYxs3UrQbPiTlbaFcDJIyXbslaOo9SGnc2YHCkXiAY8fvVDfJRjy5T/exec';
 
-  let entries   = JSON.parse(localStorage.getItem(STATE_KEY) || '[]');
-  let employees = JSON.parse(localStorage.getItem(EMP_KEY)   || '["Alice Johnson","Bob Martinez","Carol Smith","David Lee"]');
+  const ENTRIES_CACHE = 'da_tt_entries_cache';
+  const EMP_CACHE     = 'da_tt_emp_cache';
 
-  function save() {
-    localStorage.setItem(STATE_KEY, JSON.stringify(entries));
-    localStorage.setItem(EMP_KEY,   JSON.stringify(employees));
+  let entries   = [];
+  let employees = [];
+
+  // ── API helpers ──
+  async function apiFetch(type) {
+    try {
+      const resp = await fetch(SHEETS_API_URL + '?type=' + type);
+      return await resp.json();
+    } catch (err) {
+      console.error('Fetch error:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async function apiPost(action, payload) {
+    try {
+      const resp = await fetch(SHEETS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      return await resp.json();
+    } catch (err) {
+      console.error('Post error:', err);
+      showToast('Failed to sync with Google Sheets.', true);
+      return { success: false };
+    }
+  }
+
+  // ── Load data ──
+  async function loadAll() {
+    // Load caches first for instant render
+    try { entries = JSON.parse(localStorage.getItem(ENTRIES_CACHE) || '[]'); } catch {}
+    try { employees = JSON.parse(localStorage.getItem(EMP_CACHE) || '[]'); } catch {}
+    populateSelects();
+    renderTable();
+
+    // Fetch fresh from Sheets
+    const [entryData, empData] = await Promise.all([
+      apiFetch('time'),
+      apiFetch('employees'),
+    ]);
+
+    if (entryData.success && entryData.entries) {
+      entries = entryData.entries;
+      localStorage.setItem(ENTRIES_CACHE, JSON.stringify(entries));
+    }
+    if (empData.success && empData.employees) {
+      employees = empData.employees;
+      localStorage.setItem(EMP_CACHE, JSON.stringify(employees));
+    }
+
+    populateSelects();
+    renderTable();
   }
 
   // Set today's date
@@ -685,7 +738,7 @@
   }
 
   // Submit
-  function submitEntry() {
+  async function submitEntry() {
     const employee = document.getElementById('sel-employee').value;
     const date     = document.getElementById('inp-date').value;
     const hours    = parseFloat(document.getElementById('inp-hours').value);
@@ -696,14 +749,17 @@
     if (!date)     { showToast('Please enter a date.', true); return; }
     if (!hours || hours <= 0) { showToast('Please enter valid hours.', true); return; }
 
-    entries.unshift({ id: Date.now(), employee, date, hours, project: project || '—', notes });
-    save();
-    renderTable();
-    resetForm();
+    const result = await apiPost('time_create', {
+      entry: { employee, date, hours, project: project || '—', notes }
+    });
 
-    const msg = document.getElementById('success-msg');
-    msg.textContent = `${hours.toFixed(2)}h logged for ${employee}.`;
-    document.getElementById('success-overlay').classList.add('show');
+    if (result.success) {
+      resetForm();
+      const msg = document.getElementById('success-msg');
+      msg.textContent = `${hours.toFixed(2)}h logged for ${employee}.`;
+      document.getElementById('success-overlay').classList.add('show');
+      await loadAll();
+    }
   }
 
   function resetForm() {
@@ -727,6 +783,8 @@
       if (per === 'last-week')  { const s = sw(now); const ls = new Date(s); ls.setDate(ls.getDate()-7); list = list.filter(e => { const d = new Date(e.date); return d >= ls && d < s; }); }
       if (per === 'this-month') { const s = new Date(now.getFullYear(), now.getMonth(), 1); list = list.filter(e => new Date(e.date) >= s); }
     }
+    // Sort newest first
+    list.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     return list;
   }
 
@@ -743,18 +801,18 @@
       list.forEach(e => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="td-employee">${e.employee}</td>
+          <td class="td-employee">${esc(e.employee)}</td>
           <td class="td-date">${fmtDate(e.date)}</td>
-          <td class="td-hours">${e.hours.toFixed(2)}h</td>
-          <td class="td-project">${e.project}</td>
-          <td class="td-notes" title="${e.notes}">${e.notes || '<span style="opacity:.3">—</span>'}</td>
-          <td class="td-actions"><button class="btn-danger" onclick="deleteEntry(${e.id})">✕</button></td>
+          <td class="td-hours">${parseFloat(e.hours).toFixed(2)}h</td>
+          <td class="td-project">${esc(e.project)}</td>
+          <td class="td-notes" title="${esc(e.notes)}">${e.notes ? esc(e.notes) : '<span style="opacity:.3">—</span>'}</td>
+          <td class="td-actions"><button class="btn-danger" onclick="deleteEntry('${e.id}')">✕</button></td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    const total = list.reduce((s, e) => s + e.hours, 0);
+    const total = list.reduce((s, e) => s + parseFloat(e.hours || 0), 0);
     const uniq  = new Set(list.map(e => e.employee)).size;
     document.getElementById('stat-entries').textContent = list.length;
     document.getElementById('stat-hours').textContent   = total.toFixed(2);
@@ -769,11 +827,19 @@
     document.getElementById('log-subtitle').textContent = sub;
   }
 
-  function deleteEntry(id) {
+  function esc(s) {
+    const el = document.createElement('span');
+    el.textContent = s || '';
+    return el.innerHTML;
+  }
+
+  async function deleteEntry(id) {
     if (!confirm('Remove this entry?')) return;
-    entries = entries.filter(e => e.id !== id);
-    save(); renderTable();
-    showToast('Entry removed.');
+    const result = await apiPost('time_delete', { id });
+    if (result.success) {
+      showToast('Entry removed.');
+      await loadAll();
+    }
   }
 
   // Employees modal
@@ -787,25 +853,39 @@
     [...employees].sort().forEach(name => {
       list.insertAdjacentHTML('beforeend', `
         <div class="emp-row">
-          <span>${name}</span>
+          <span>${esc(name)}</span>
           <button class="btn-danger" onclick="removeEmployee('${name.replace(/'/g,"\\'")}')">✕</button>
         </div>
       `);
     });
     if (!employees.length) list.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px">No employees added yet.</p>';
   }
-  function addEmployee() {
+
+  async function addEmployee() {
     const inp = document.getElementById('new-emp-name');
     const name = inp.value.trim();
     if (!name) return;
     if (employees.map(e=>e.toLowerCase()).includes(name.toLowerCase())) { showToast('Employee already exists.', true); return; }
-    employees.push(name); save(); inp.value = ''; renderEmpList();
-    showToast(`Added ${name.split(' ')[0]}.`);
+
+    const result = await apiPost('emp_add', { name });
+    if (result.success) {
+      inp.value = '';
+      showToast(`Added ${name.split(' ')[0]}.`);
+      await loadAll();
+      renderEmpList();
+    } else {
+      showToast(result.error || 'Failed to add employee.', true);
+    }
   }
-  function removeEmployee(name) {
+
+  async function removeEmployee(name) {
     if (!confirm(`Remove "${name}"? Past entries will remain.`)) return;
-    employees = employees.filter(e => e !== name); save(); renderEmpList();
-    showToast('Employee removed.');
+    const result = await apiPost('emp_remove', { name });
+    if (result.success) {
+      showToast('Employee removed.');
+      await loadAll();
+      renderEmpList();
+    }
   }
 
   // Export
@@ -824,6 +904,7 @@
 
   // Helpers
   function fmtDate(str) {
+    if (!str) return '—';
     const d = new Date(str + 'T00:00:00');
     return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
   }
@@ -839,8 +920,7 @@
   }
 
   // Init
-  populateSelects();
-  renderTable();
+  loadAll();
 </script>
 </body>
 </html>
