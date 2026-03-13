@@ -253,6 +253,15 @@
   /* ── Footer ── */
   .form-footer { text-align: center; margin-top: 28px; font-size: 12px; color: var(--text-muted); }
 
+  /* ── Sync status ── */
+  .sync-status {
+    font-family: var(--mono); font-size: 11px; padding: 4px 10px;
+    border-radius: 6px; white-space: nowrap;
+  }
+  .sync-syncing { background: rgba(16,96,160,0.1); color: var(--blue); }
+  .sync-synced { background: rgba(26,138,80,0.1); color: var(--green); }
+  .sync-error { background: rgba(211,36,52,0.08); color: var(--accent); }
+
   /* ── Responsive ── */
   @media (max-width: 700px) {
     .form-grid { grid-template-columns: 1fr; }
@@ -287,6 +296,8 @@
       <div class="section-number">1</div>
       <div class="section-title">Tasks</div>
       <div class="section-actions">
+        <span class="sync-status" id="syncStatus"></span>
+        <button class="btn-secondary" onclick="refreshTasks()">↻ Refresh</button>
         <button class="btn-primary" onclick="openNewTask()">+ New Task</button>
       </div>
     </div>
@@ -437,18 +448,93 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'da_tasks';
+// ═══════════════════════════════════════════════════════════════
+// CONFIGURATION — Paste your Google Apps Script Web App URL here
+// ═══════════════════════════════════════════════════════════════
+const SHEETS_API_URL = 'https://script.google.com/a/macros/desiarms.com/s/AKfycbyq2kEvu2gzyViYxs3UrQbPiTlbaFcDJIyXbslaOo9SGnc2YHCkXiAY8fvVDfJRjy5T/exec';
+// Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
 
-// ── Data layer (localStorage for now, Google Sheets later) ──
-function getTasks() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
+// Local cache key (used as fallback and for fast rendering)
+const CACHE_KEY = 'da_tasks_cache';
+
+// ── In-memory task list ──
+let allTasks = [];
+let isSyncing = false;
+
+// ── Data layer — Google Sheets with localStorage cache ──
+async function fetchTasks() {
+  // Load cache first for instant render
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY)) || [];
+    if (cached.length > 0 && allTasks.length === 0) {
+      allTasks = cached;
+      renderTasksFromMemory();
+    }
+  } catch {}
+
+  // Then fetch fresh data from Sheets
+  setSyncStatus('syncing');
+  try {
+    const resp = await fetch(SHEETS_API_URL);
+    const data = await resp.json();
+    if (data.success && data.tasks) {
+      allTasks = data.tasks;
+      localStorage.setItem(CACHE_KEY, JSON.stringify(allTasks));
+      renderTasksFromMemory();
+      setSyncStatus('synced');
+    } else {
+      console.error('Sheets API error:', data.error);
+      setSyncStatus('error');
+    }
+  } catch (err) {
+    console.error('Fetch error:', err);
+    setSyncStatus('error');
+    // Fall back to cache
+    if (allTasks.length === 0) {
+      try { allTasks = JSON.parse(localStorage.getItem(CACHE_KEY)) || []; } catch {}
+      renderTasksFromMemory();
+    }
+  }
 }
-function saveTasks(tasks) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+
+async function apiPost(action, payload) {
+  setSyncStatus('syncing');
+  try {
+    const resp = await fetch(SHEETS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // Apps Script needs text/plain for CORS
+      body: JSON.stringify({ action, ...payload }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      setSyncStatus('synced');
+      // Refresh data from sheet
+      await fetchTasks();
+    } else {
+      console.error('API error:', data.error);
+      setSyncStatus('error');
+      alert('Error: ' + (data.error || 'Unknown error'));
+    }
+    return data;
+  } catch (err) {
+    console.error('Post error:', err);
+    setSyncStatus('error');
+    alert('Failed to connect to Google Sheets. Check your connection.');
+    return { success: false };
+  }
 }
-function genId() {
-  return 'T-' + Date.now().toString(36).toUpperCase();
+
+// ── Sync status indicator ──
+function setSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const labels = {
+    syncing: '🔄 Syncing…',
+    synced: '✅ Synced',
+    error: '⚠️ Offline — using cached data',
+  };
+  el.textContent = labels[status] || '';
+  el.className = 'sync-status sync-' + status;
 }
 
 // ── Status helpers ──
@@ -470,15 +556,14 @@ function fmtDate(d) {
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// ── Render ──
-function renderTasks() {
-  const tasks = getTasks();
+// ── Render from in-memory data ──
+function renderTasksFromMemory() {
   const search = document.getElementById('filterSearch').value.toLowerCase();
   const statusF = document.getElementById('filterStatus').value;
   const typeF = document.getElementById('filterType').value;
   const ownerF = document.getElementById('filterOwner').value;
 
-  const filtered = tasks.filter(t => {
+  const filtered = allTasks.filter(t => {
     if (statusF && t.status !== statusF) return false;
     if (typeF && t.type !== typeF) return false;
     if (ownerF && t.owner !== ownerF) return false;
@@ -489,7 +574,6 @@ function renderTasks() {
     return true;
   });
 
-  // Sort: active tasks first (by start date desc), then done/cancelled
   const active = filtered.filter(t => t.status !== 'Done' && t.status !== 'Cancelled');
   const inactive = filtered.filter(t => t.status === 'Done' || t.status === 'Cancelled');
   active.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
@@ -527,9 +611,12 @@ function renderTasks() {
     `).join('');
   }
 
-  renderStats(tasks, filtered);
-  renderOwnerFilter(tasks);
+  renderStats(filtered);
+  renderOwnerFilter(allTasks);
 }
+
+// Alias for filter event handlers
+function renderTasks() { renderTasksFromMemory(); }
 
 function esc(s) {
   const el = document.createElement('span');
@@ -537,7 +624,7 @@ function esc(s) {
   return el.innerHTML;
 }
 
-function renderStats(all, filtered) {
+function renderStats(filtered) {
   const counts = {
     total: filtered.length,
     todo: filtered.filter(t => t.status === 'To Do').length,
@@ -579,8 +666,7 @@ function openNewTask() {
 }
 
 function editTask(id) {
-  const tasks = getTasks();
-  const t = tasks.find(x => x.id === id);
+  const t = allTasks.find(x => x.id === id);
   if (!t) return;
   document.getElementById('modalTitle').textContent = 'Edit Task';
   document.getElementById('taskId').value = t.id;
@@ -600,10 +686,9 @@ function closeModal() {
   document.getElementById('taskModal').classList.remove('active');
 }
 
-function saveTask() {
+async function saveTask() {
   const id = document.getElementById('taskId').value;
   const task = {
-    id: id || genId(),
     task: document.getElementById('taskName').value.trim(),
     type: document.getElementById('taskType').value,
     customer: document.getElementById('taskCustomer').value.trim(),
@@ -620,28 +705,28 @@ function saveTask() {
     return;
   }
 
-  const tasks = getTasks();
-  if (id) {
-    const idx = tasks.findIndex(t => t.id === id);
-    if (idx >= 0) tasks[idx] = { ...tasks[idx], ...task };
-  } else {
-    task.createdAt = new Date().toISOString();
-    tasks.push(task);
-  }
-  saveTasks(tasks);
   closeModal();
-  renderTasks();
+
+  if (id) {
+    task.id = id;
+    await apiPost('update', { task });
+  } else {
+    await apiPost('create', { task });
+  }
 }
 
-function deleteTask(id) {
+async function deleteTask(id) {
   if (!confirm('Delete this task?')) return;
-  const tasks = getTasks().filter(t => t.id !== id);
-  saveTasks(tasks);
-  renderTasks();
+  await apiPost('delete', { id });
+}
+
+// ── Refresh button ──
+function refreshTasks() {
+  fetchTasks();
 }
 
 // ── Init ──
-renderTasks();
+fetchTasks();
 
 // Close modal on overlay click
 document.getElementById('taskModal').addEventListener('click', function(e) {
