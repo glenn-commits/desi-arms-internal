@@ -186,6 +186,15 @@
       background-position: right 12px center;
       padding-right: 36px;
     }
+    .clock-sel {
+      flex: 1;
+      width: auto;
+      padding: 11px 8px;
+      padding-right: 8px;
+      background-image: none;
+      text-align: center;
+      min-width: 0;
+    }
     input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.5; }
 
     /* Coming soon block */
@@ -506,17 +515,17 @@
           <div class="field-group">
             <label>Clock In</label>
             <div style="display:flex; gap:6px;">
-              <select id="inp-clock-in-h" onchange="calcHoursFromClock()" style="flex:1;">
+              <select id="inp-clock-in-h" onchange="calcHoursFromClock()" class="clock-sel">
                 <option value="">Hr</option>
                 <option>12</option><option>1</option><option>2</option><option>3</option>
                 <option>4</option><option>5</option><option>6</option><option>7</option>
                 <option>8</option><option>9</option><option>10</option><option>11</option>
               </select>
-              <select id="inp-clock-in-m" onchange="calcHoursFromClock()" style="flex:1;">
+              <select id="inp-clock-in-m" onchange="calcHoursFromClock()" class="clock-sel">
                 <option value="">Min</option>
                 <option>00</option><option>15</option><option>30</option><option>45</option>
               </select>
-              <select id="inp-clock-in-ampm" onchange="calcHoursFromClock()" style="flex:1;">
+              <select id="inp-clock-in-ampm" onchange="calcHoursFromClock()" class="clock-sel">
                 <option>AM</option><option>PM</option>
               </select>
             </div>
@@ -524,17 +533,17 @@
           <div class="field-group">
             <label>Clock Out</label>
             <div style="display:flex; gap:6px;">
-              <select id="inp-clock-out-h" onchange="calcHoursFromClock()" style="flex:1;">
+              <select id="inp-clock-out-h" onchange="calcHoursFromClock()" class="clock-sel">
                 <option value="">Hr</option>
                 <option>12</option><option>1</option><option>2</option><option>3</option>
                 <option>4</option><option>5</option><option>6</option><option>7</option>
                 <option>8</option><option>9</option><option>10</option><option>11</option>
               </select>
-              <select id="inp-clock-out-m" onchange="calcHoursFromClock()" style="flex:1;">
+              <select id="inp-clock-out-m" onchange="calcHoursFromClock()" class="clock-sel">
                 <option value="">Min</option>
                 <option>00</option><option>15</option><option>30</option><option>45</option>
               </select>
-              <select id="inp-clock-out-ampm" onchange="calcHoursFromClock()" style="flex:1;">
+              <select id="inp-clock-out-ampm" onchange="calcHoursFromClock()" class="clock-sel">
                 <option>AM</option><option>PM</option>
               </select>
             </div>
