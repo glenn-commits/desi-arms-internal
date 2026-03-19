@@ -260,14 +260,68 @@
 
   .form-footer { text-align: center; margin-top: 28px; font-size: 12px; color: var(--text-muted); }
 
+  .btn-sheets {
+    padding: 10px 20px; font-family: var(--body); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--green); background: transparent;
+    border: 1.5px solid var(--green); border-radius: 8px; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-sheets:hover { background: rgba(26,138,80,0.08); }
+
+  /* ── Print styles ── */
   @media print {
     body { background: #fff; }
     body::before { display: none; }
-    .lookup-btn, .action-row, .back-link { display: none !important; }
-    .page-wrapper { padding: 0; }
-    .sliders-grid { display: none; }
-    .card { box-shadow: none; border: 1px solid #eee; }
+    .lookup-btn, .action-row, .back-link, #sheetsModal, #printTxnOverlay { display: none !important; }
+    .page-wrapper { padding: 0; max-width: 100%; }
+    .sliders-grid { display: none !important; }
+    .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+
+    /* Transaction-driven visibility */
+    .print-only-purchase .hide-purchase { display: none !important; }
+    .print-only-store_credit .hide-store_credit { display: none !important; }
+    .print-only-consignment .hide-consignment { display: none !important; }
+
+    /* Sections hidden by default, shown per txn */
+    #printCard-condition { display: none; }
+    #printCard-market { display: none; }
+    #printCard-buy { display: none; }
+    #printCard-trade { display: none; }
+    #printCard-sell { display: none; }
+    #printCard-ai { display: none; }
+
+    /* Purchase: buy price + ai notes */
+    body.txn-purchase #printCard-buy { display: block; }
+    body.txn-purchase #printCard-ai { display: block; }
+
+    /* Store Credit: condition + accessories + trade + ai */
+    body.txn-store_credit #printCard-condition { display: block; }
+    body.txn-store_credit #printCard-trade { display: block; }
+    body.txn-store_credit #printCard-ai { display: block; }
+
+    /* Consignment: condition + accessories + sell + ai */
+    body.txn-consignment #printCard-condition { display: block; }
+    body.txn-consignment #printCard-sell { display: block; }
+    body.txn-consignment #printCard-ai { display: block; }
+
+    /* Always show details and market range numbers (no sliders) */
+    #printCard-details { display: block !important; }
+    .price-summary { display: none; }
+
+    .print-txn-banner {
+      display: block !important;
+      background: var(--primary); color: #fff;
+      font-family: var(--head); font-size: 14px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 8px 20px; border-radius: 8px; margin-bottom: 16px;
+      text-align: center;
+    }
   }
+  .print-txn-banner { display: none; }
+
+  /* Print-only cards (hidden on screen) */
+  .print-only-card { display: none; }
+  @media print { .print-only-card { display: block; } }
   @media (max-width: 700px) {
     .form-grid { grid-template-columns: 1fr; }
     .condition-grid { grid-template-columns: repeat(3, 1fr); }
@@ -304,6 +358,15 @@
     </div>
     <div class="form-body">
       <div class="form-grid">
+        <div class="form-group">
+          <label>Transaction Type</label>
+          <select id="transactionType">
+            <option value="">Select type…</option>
+            <option value="purchase">Purchase (We Buy)</option>
+            <option value="store_credit">Store Credit / Trade-In</option>
+            <option value="consignment">Consignment</option>
+          </select>
+        </div>
         <div class="form-group">
           <label>Category</label>
           <select id="category">
@@ -387,6 +450,68 @@
   <!-- ═══════════ RESULTS ═══════════ -->
   <div id="resultsSection" style="margin-top:24px;">
 
+    <!-- Print transaction banner (only shows when printing) -->
+    <div class="print-txn-banner" id="printTxnBanner"></div>
+
+    <!-- Print-only: Firearm Details summary card -->
+    <div class="card print-only-card" id="printCard-details">
+      <div class="section-header"><div class="section-number">✦</div><div class="section-title">Firearm Details</div></div>
+      <div class="form-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; font-size:13px;">
+          <div><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Category</span><br><span id="prt-category">—</span></div>
+          <div><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Make</span><br><span id="prt-make">—</span></div>
+          <div><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Model</span><br><span id="prt-model">—</span></div>
+          <div><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Caliber</span><br><span id="prt-caliber">—</span></div>
+          <div style="grid-column:1/-1"><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Additional Details</span><br><span id="prt-details">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Print-only: Condition + Accessories -->
+    <div class="card print-only-card" id="printCard-condition">
+      <div class="section-header"><div class="section-number">✦</div><div class="section-title">Condition &amp; Accessories</div></div>
+      <div class="form-body">
+        <div style="font-size:13px; display:grid; grid-template-columns:1fr 1fr; gap:10px 24px;">
+          <div><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Condition</span><br><span id="prt-condition">—</span></div>
+          <div><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Accessories</span><br><span id="prt-accessories">—</span></div>
+          <div style="grid-column:1/-1"><span style="font-weight:600; color:var(--primary-light); text-transform:uppercase; font-size:11px; letter-spacing:0.04em;">Additional Notes</span><br><span id="prt-extras">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Print-only: Buy Price -->
+    <div class="card print-only-card" id="printCard-buy">
+      <div class="section-header"><div class="section-number">✦</div><div class="section-title">Buy Price</div></div>
+      <div class="form-body" style="display:flex; gap:32px; align-items:center;">
+        <div><div style="font-family:var(--mono); font-size:2.2rem; font-weight:bold; color:#c0302a;" id="prt-buy">—</div><div style="font-size:12px; color:var(--text-muted);" id="prt-buyPct">—</div></div>
+        <div style="font-size:13px; color:var(--text-muted);">Recommended purchase offer based on current market mid.</div>
+      </div>
+    </div>
+
+    <!-- Print-only: Trade-In Value -->
+    <div class="card print-only-card" id="printCard-trade">
+      <div class="section-header"><div class="section-number">✦</div><div class="section-title">Store Credit / Trade-In Value</div></div>
+      <div class="form-body" style="display:flex; gap:32px; align-items:center;">
+        <div><div style="font-family:var(--mono); font-size:2.2rem; font-weight:bold; color:var(--blue);" id="prt-trade">—</div><div style="font-size:12px; color:var(--text-muted);" id="prt-tradePct">—</div></div>
+        <div style="font-size:13px; color:var(--text-muted);">Recommended store credit offer based on current market mid.</div>
+      </div>
+    </div>
+
+    <!-- Print-only: Sell / Ask Price -->
+    <div class="card print-only-card" id="printCard-sell">
+      <div class="section-header"><div class="section-number">✦</div><div class="section-title">Consignment / Asking Price</div></div>
+      <div class="form-body" style="display:flex; gap:32px; align-items:center;">
+        <div><div style="font-family:var(--mono); font-size:2.2rem; font-weight:bold; color:var(--green);" id="prt-sell">—</div><div style="font-size:12px; color:var(--text-muted);" id="prt-sellPct">—</div></div>
+        <div style="font-size:13px; color:var(--text-muted);">Recommended asking / listing price based on current market mid.</div>
+      </div>
+    </div>
+
+    <!-- Print-only: AI Notes -->
+    <div class="card print-only-card" id="printCard-ai">
+      <div class="section-header"><div class="section-number">✦</div><div class="section-title">AI Pricing Notes</div></div>
+      <div class="form-body"><div id="prt-aiNotes" style="font-size:13px; color:var(--text); line-height:1.8; white-space:pre-wrap;"></div></div>
+    </div>
+
     <div class="card">
       <div class="section-header">
         <div class="section-number">4</div>
@@ -451,9 +576,16 @@
 
     <div class="action-row">
       <button class="btn-secondary" onclick="resetTool()">↩ New Lookup</button>
-      <button class="btn-primary-sm" onclick="window.print()">🖨 Print Summary</button>
+      <button class="btn-sheets" id="sheetsBtn" onclick="logToSheets()">📊 Log to Sheets</button>
+      <button class="btn-primary-sm" onclick="doPrint()">🖨 Print Summary</button>
     </div>
   </div>
+
+  <!-- ── Print transaction type selector ── -->
+  <div id="printTxnOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:1000; align-items:center; justify-content:center;"></div>
+
+  <!-- ── Toast notification ── -->
+  <div id="sheetsToast" style="display:none; position:fixed; bottom:28px; right:28px; z-index:2000; padding:14px 20px; border-radius:10px; font-size:13px; font-weight:600; font-family:var(--body); box-shadow:0 8px 30px rgba(0,0,0,0.15); transition:opacity 0.3s;"></div>
 
   <div class="form-footer">
     &copy; 2026 Desi Arms &nbsp;·&nbsp; <em>We've Got Your Six</em> &nbsp;·&nbsp; Internal Use Only
@@ -461,7 +593,7 @@
 </div>
 
 <script>
-let selectedCondition = null, marketMid = null;
+let selectedCondition = null, marketMid = null, lastResult = null;
 
 function selectCondition(el) {
   document.querySelectorAll(".cond-btn").forEach(b => b.classList.remove("active"));
@@ -487,6 +619,7 @@ async function lookupPricing() {
   const caliber = document.getElementById("caliber").value.trim();
   const details = document.getElementById("details").value.trim();
   const extras = document.getElementById("extraNotes").value.trim();
+  const txnType = document.getElementById("transactionType").value;
   const errorBox = document.getElementById("errorBox");
   errorBox.style.display = "none";
 
@@ -523,12 +656,36 @@ async function lookupPricing() {
 
     const r = JSON.parse(txt);
     marketMid = r.marketMid;
+
+    // Store full result for Sheets logging
+    lastResult = { category, make, model, caliber, details, extras,
+      condition: selectedCondition.label, conditionScore: selectedCondition.score,
+      accessories: accStr, transactionType: txnType,
+      marketLow: r.marketLow, marketMid: r.marketMid, marketHigh: r.marketHigh,
+      summary: r.summary, notes: r.notes,
+      timestamp: new Date().toISOString() };
+
     document.getElementById("mktLow").textContent = fmt(r.marketLow);
     document.getElementById("mktMid").textContent = fmt(r.marketMid);
     document.getElementById("mktHigh").textContent = fmt(r.marketHigh);
     document.getElementById("mktCond").textContent = selectedCondition.label + (r.dataQuality || "");
     document.getElementById("marketSummary").textContent = r.summary;
     document.getElementById("aiNotes").textContent = r.notes;
+
+    // Populate print cards
+    document.getElementById("prt-category").textContent = category || "—";
+    document.getElementById("prt-make").textContent = make || "—";
+    document.getElementById("prt-model").textContent = model || "—";
+    document.getElementById("prt-caliber").textContent = caliber || "—";
+    document.getElementById("prt-details").textContent = details || "—";
+    document.getElementById("prt-condition").textContent = selectedCondition.label;
+    document.getElementById("prt-accessories").textContent = accStr;
+    document.getElementById("prt-extras").textContent = extras || "—";
+    document.getElementById("prt-aiNotes").textContent = r.notes;
+
+    // Set print transaction type on body
+    applyPrintTxnType(txnType);
+
     updatePrices();
     document.getElementById("resultsSection").style.display = "block";
     document.getElementById("resultsSection").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -562,9 +719,141 @@ function updatePrices() {
   document.getElementById("sumBuyPct").textContent = bp + "% of mid market";
   document.getElementById("sumTradePct").textContent = tp + "% of mid market";
   document.getElementById("sumSellPct").textContent = sp + "% of mid market";
+
+  // Update print price cards
+  document.getElementById("prt-buy").textContent = fmt(buy);
+  document.getElementById("prt-buyPct").textContent = bp + "% of market mid";
+  document.getElementById("prt-trade").textContent = fmt(trade);
+  document.getElementById("prt-tradePct").textContent = tp + "% of market mid";
+  document.getElementById("prt-sell").textContent = fmt(sell);
+  document.getElementById("prt-sellPct").textContent = sp + "% of market mid";
+
+  if (lastResult) {
+    lastResult.buyPrice = Math.round(buy);
+    lastResult.buyPct = bp;
+    lastResult.tradePrice = Math.round(trade);
+    lastResult.tradePct = tp;
+    lastResult.sellPrice = Math.round(sell);
+    lastResult.sellPct = sp;
+  }
+}
+
+// ── Print transaction type ──
+const TXN_LABELS = {
+  purchase: "Transaction Type: Purchase (We Buy)",
+  store_credit: "Transaction Type: Store Credit / Trade-In",
+  consignment: "Transaction Type: Consignment"
+};
+
+function applyPrintTxnType(txn) {
+  document.body.classList.remove("txn-purchase", "txn-store_credit", "txn-consignment");
+  if (txn) document.body.classList.add("txn-" + txn);
+  const banner = document.getElementById("printTxnBanner");
+  banner.textContent = TXN_LABELS[txn] || "Transaction Type: Not Specified";
+}
+
+// Override print button to allow changing txn type first
+const originalPrint = window.print.bind(window);
+document.querySelector && document.addEventListener("DOMContentLoaded", () => {
+  // handled inline below
+});
+
+function doPrint() {
+  const txn = document.getElementById("transactionType").value;
+  if (!txn) {
+    // Show a quick pick overlay
+    const overlay = document.getElementById("printTxnOverlay");
+    overlay.innerHTML = `
+      <div style="background:#fff; border-radius:16px; padding:32px; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <div style="font-family:var(--head); font-size:20px; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:16px;">Select Transaction Type</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <button class="btn-primary-sm" onclick="setPrintTxn('purchase')">Purchase (We Buy)</button>
+          <button class="btn-primary-sm" onclick="setPrintTxn('store_credit')">Store Credit / Trade-In</button>
+          <button class="btn-primary-sm" onclick="setPrintTxn('consignment')">Consignment</button>
+          <button class="btn-secondary" onclick="document.getElementById('printTxnOverlay').style.display='none'">Cancel</button>
+        </div>
+      </div>`;
+    overlay.style.display = "flex";
+  } else {
+    applyPrintTxnType(txn);
+    window.print();
+  }
+}
+
+function setPrintTxn(txn) {
+  document.getElementById("transactionType").value = txn;
+  document.getElementById("printTxnOverlay").style.display = "none";
+  applyPrintTxnType(txn);
+  window.print();
+}
+
+// ── Google Sheets logging ──
+const SHEETS_API_URL = 'https://script.google.com/macros/s/AKfycbyq2kEvu2gzyViYxs3UrQbPiTlbaFcDJIyXbslaOo9SGnc2YHCkXiAY8fvVDfJRjy5T/exec';
+
+async function logToSheets() {
+  if (!lastResult) return;
+  const btn = document.getElementById("sheetsBtn");
+  btn.disabled = true;
+  btn.textContent = "Logging…";
+
+  try {
+    const resp = await fetch(SHEETS_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'firearm_log',
+        entry: {
+          timestamp:       lastResult.timestamp,
+          transactionType: lastResult.transactionType || 'not specified',
+          category:        lastResult.category,
+          make:            lastResult.make,
+          model:           lastResult.model,
+          caliber:         lastResult.caliber || '',
+          details:         lastResult.details || '',
+          condition:       lastResult.condition,
+          conditionScore:  lastResult.conditionScore,
+          accessories:     lastResult.accessories,
+          notes:           lastResult.extras || '',
+          marketLow:       lastResult.marketLow,
+          marketMid:       lastResult.marketMid,
+          marketHigh:      lastResult.marketHigh,
+          buyPrice:        lastResult.buyPrice || '',
+          buyPct:          lastResult.buyPct || '',
+          tradePrice:      lastResult.tradePrice || '',
+          tradePct:        lastResult.tradePct || '',
+          sellPrice:       lastResult.sellPrice || '',
+          sellPct:         lastResult.sellPct || '',
+          aiNotes:         lastResult.notes || '',
+        }
+      })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      showToast('✅ Logged to Google Sheets.', false);
+    } else {
+      showToast('❌ Sheets error: ' + (data.error || 'Unknown error'), true);
+    }
+  } catch (err) {
+    showToast('❌ Failed to log: ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📊 Log to Sheets";
+  }
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById("sheetsToast");
+  t.textContent = msg;
+  t.style.display = "block";
+  t.style.background = isError ? "rgba(211,36,52,0.95)" : "rgba(26,138,80,0.95)";
+  t.style.color = "#fff";
+  t.style.opacity = "1";
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = "0"; setTimeout(() => t.style.display = "none", 300); }, 3500);
 }
 
 function resetTool() {
+  document.getElementById("transactionType").value = "";
   document.getElementById("category").value = "";
   document.getElementById("make").value = "";
   document.getElementById("model").value = "";
@@ -578,6 +867,8 @@ function resetTool() {
   });
   selectedCondition = null;
   marketMid = null;
+  lastResult = null;
+  document.body.classList.remove("txn-purchase", "txn-store_credit", "txn-consignment");
   document.getElementById("resultsSection").style.display = "none";
   document.getElementById("errorBox").style.display = "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
