@@ -504,17 +504,27 @@
         <div class="field-row">
           <div class="field-group">
             <label for="inp-clock-in">Clock In</label>
-            <input type="time" id="inp-clock-in" oninput="calcHoursFromClock()"/>
+            <input type="time" id="inp-clock-in" onchange="calcHoursFromClock()"/>
           </div>
           <div class="field-group">
             <label for="inp-clock-out">Clock Out</label>
-            <input type="time" id="inp-clock-out" oninput="calcHoursFromClock()"/>
+            <input type="time" id="inp-clock-out" onchange="calcHoursFromClock()"/>
           </div>
         </div>
 
         <div class="field-group">
           <label for="inp-hours">Hours <span class="req">*</span></label>
           <input type="number" id="inp-hours" placeholder="8.00" min="0.25" max="24" step="0.25"/>
+        </div>
+
+        <div class="field-group">
+          <label for="inp-project">Project / Code</label>
+          <input type="text" id="inp-project" placeholder="e.g. PROJ-001"/>
+        </div>
+
+        <div class="field-group">
+          <label for="inp-notes">Notes <span style="color:var(--text-muted);font-weight:400;text-transform:none;">(optional)</span></label>
+          <textarea id="inp-notes" placeholder="Brief description of work performed…"></textarea>
         </div>
 
         <button class="btn-primary" onclick="submitEntry()" style="margin-bottom:10px;">
@@ -717,13 +727,14 @@
   async function submitEntry() {
     const employee = document.getElementById('sel-employee').value;
     const date     = document.getElementById('inp-date').value;
-    const hours    = parseFloat(document.getElementById('inp-hours').value);
+    const hoursRaw = document.getElementById('inp-hours').value;
+    const hours    = parseFloat(hoursRaw);
     const project  = document.getElementById('inp-project').value.trim();
     const notes    = document.getElementById('inp-notes').value.trim();
 
     if (!employee) { showToast('Please select an employee.', true); return; }
     if (!date)     { showToast('Please enter a date.', true); return; }
-    if (!hours || hours <= 0) { showToast('Please enter valid hours.', true); return; }
+    if (!hoursRaw || isNaN(hours) || hours <= 0) { showToast('Please enter valid hours, or set Clock In and Clock Out.', true); return; }
 
     const result = await apiPost('time_create', {
       entry: { employee, date, hours, project: project || '—', notes }
