@@ -496,49 +496,25 @@
           </select>
         </div>
 
+        <div class="field-group">
+          <label for="inp-date">Date <span class="req">*</span></label>
+          <input type="date" id="inp-date"/>
+        </div>
+
         <div class="field-row">
           <div class="field-group">
-            <label for="inp-date">Date <span class="req">*</span></label>
-            <input type="date" id="inp-date"/>
+            <label for="inp-clock-in">Clock In</label>
+            <input type="time" id="inp-clock-in" oninput="calcHoursFromClock()"/>
           </div>
           <div class="field-group">
-            <label for="inp-hours">Hours <span class="req">*</span></label>
-            <input type="number" id="inp-hours" placeholder="8.00" min="0.25" max="24" step="0.25"/>
+            <label for="inp-clock-out">Clock Out</label>
+            <input type="time" id="inp-clock-out" oninput="calcHoursFromClock()"/>
           </div>
         </div>
 
         <div class="field-group">
-          <label for="inp-project">Project / Code</label>
-          <input type="text" id="inp-project" placeholder="e.g. PROJ-001"/>
-        </div>
-
-        <div class="field-group">
-          <label for="inp-notes">Notes <span style="color:var(--text-muted);font-weight:400;text-transform:none;">(optional)</span></label>
-          <textarea id="inp-notes" placeholder="Brief description of work performed…"></textarea>
-        </div>
-
-        <!-- Coming Soon: Time In/Out -->
-        <div style="margin-bottom:18px;">
-          <div class="coming-soon-block">
-            <div class="coming-soon-label">
-              <svg style="width:12px;height:12px;fill:var(--accent-hover)" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-              Coming Soon — Time In / Out &amp; Breaks
-            </div>
-            <div class="disabled-row">
-              <div class="field-group">
-                <label>Clock In</label>
-                <input type="time" placeholder="08:00" tabindex="-1"/>
-              </div>
-              <div class="field-group">
-                <label>Clock Out</label>
-                <input type="time" placeholder="17:00" tabindex="-1"/>
-              </div>
-            </div>
-            <div class="disabled-single field-group">
-              <label>Lunch / Break (hrs)</label>
-              <input type="number" placeholder="0.50" min="0" max="4" step="0.25" tabindex="-1"/>
-            </div>
-          </div>
+          <label for="inp-hours">Hours <span class="req">*</span></label>
+          <input type="number" id="inp-hours" placeholder="8.00" min="0.25" max="24" step="0.25"/>
         </div>
 
         <button class="btn-primary" onclick="submitEntry()" style="margin-bottom:10px;">
@@ -766,6 +742,10 @@
     document.getElementById('sel-employee').value = '';
     document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('inp-hours').value = '';
+    document.getElementById('inp-hours').readOnly = false;
+    document.getElementById('inp-hours').style.background = '';
+    document.getElementById('inp-clock-in').value = '';
+    document.getElementById('inp-clock-out').value = '';
     document.getElementById('inp-project').value = '';
     document.getElementById('inp-notes').value = '';
   }
@@ -921,6 +901,26 @@
 
   // Init
   loadAll();
+
+  function calcHoursFromClock() {
+    const clockIn  = document.getElementById('inp-clock-in').value;
+    const clockOut = document.getElementById('inp-clock-out').value;
+    const hoursInput = document.getElementById('inp-hours');
+    if (clockIn && clockOut) {
+      const [inH, inM]   = clockIn.split(':').map(Number);
+      const [outH, outM] = clockOut.split(':').map(Number);
+      let mins = (outH * 60 + outM) - (inH * 60 + inM);
+      if (mins < 0) mins += 24 * 60; // handle overnight
+      const hrs = Math.round((mins / 60) * 4) / 4; // round to nearest 0.25
+      hoursInput.value = hrs > 0 ? hrs.toFixed(2) : '';
+      hoursInput.readOnly = hrs > 0;
+      hoursInput.style.background = hrs > 0 ? 'var(--input-bg)' : '';
+    } else {
+      hoursInput.readOnly = false;
+      hoursInput.style.background = '';
+    }
+  }
+
 </script>
 </body>
 </html>
