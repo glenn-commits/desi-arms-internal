@@ -262,6 +262,36 @@
   .sync-synced { background: rgba(26,138,80,0.1); color: var(--green); }
   .sync-error { background: rgba(211,36,52,0.08); color: var(--accent); }
 
+  /* ── Completed toggle button ── */
+  .btn-toggle-completed {
+    padding: 8px 16px; font-family: var(--body); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--text-muted); background: transparent;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-toggle-completed:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-toggle-completed.active {
+    border-color: var(--green); color: var(--green);
+    background: rgba(26,138,80,0.07);
+  }
+
+  /* ── Completed row (when shown via search or toggle) ── */
+  .task-table tr.done-shown td {
+    opacity: 0.55;
+  }
+  .task-table tr.done-shown .task-name { text-decoration: line-through; }
+  .task-table tr.done-shown:hover td { background: rgba(26,138,80,0.03); }
+
+  .completed-divider td {
+    padding: 6px 14px;
+    background: rgba(26,138,80,0.05);
+    border-top: 2px solid rgba(26,138,80,0.15);
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--green); text-align: center;
+  }
+
   /* ── Responsive ── */
   @media (max-width: 700px) {
     .form-grid { grid-template-columns: 1fr; }
@@ -341,6 +371,11 @@
         <select id="filterOwner" onchange="renderTasks()">
           <option value="">All Owners</option>
         </select>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:flex-end;">
+        <button class="btn-toggle-completed" id="btnToggleCompleted" onclick="toggleCompleted()">
+          ☑ Show Completed
+        </button>
       </div>
     </div>
 
@@ -460,6 +495,15 @@ const CACHE_KEY = 'da_tasks_cache';
 // ── In-memory task list ──
 let allTasks = [];
 let isSyncing = false;
+let showCompleted = false;  // completed tasks hidden by default
+
+function toggleCompleted() {
+  showCompleted = !showCompleted;
+  const btn = document.getElementById('btnToggleCompleted');
+  btn.classList.toggle('active', showCompleted);
+  btn.textContent = showCompleted ? '☑ Hide Completed' : '☑ Show Completed';
+  renderTasksFromMemory();
+}
 
 // ── Data layer — Google Sheets with localStorage cache ──
 async function fetchTasks() {
@@ -558,38 +602,58 @@ function fmtDate(d) {
 
 // ── Render from in-memory data ──
 function renderTasksFromMemory() {
-  const search = document.getElementById('filterSearch').value.toLowerCase();
+  const search = document.getElementById('filterSearch').value.toLowerCase().trim();
   const statusF = document.getElementById('filterStatus').value;
   const typeF = document.getElementById('filterType').value;
   const ownerF = document.getElementById('filterOwner').value;
 
+  const isCompleted = t => t.status === 'Done' || t.status === 'Cancelled';
+
+  // Determine if a task matches the search term
+  const matchesSearch = t => {
+    if (!search) return true;
+    const hay = (t.task + t.customer + t.workOrder + t.owner + t.notes).toLowerCase();
+    return hay.includes(search);
+  };
+
+  // Explicit status filter includes completed if user selected Done/Cancelled
+  const explicitStatusIncludesCompleted = statusF === 'Done' || statusF === 'Cancelled';
+
+  // A task is visible if:
+  // 1. It passes all filter dropdowns
+  // 2. AND either: it's not completed, showCompleted is on, explicit status filter picks it, or a search term matches it
   const filtered = allTasks.filter(t => {
     if (statusF && t.status !== statusF) return false;
     if (typeF && t.type !== typeF) return false;
     if (ownerF && t.owner !== ownerF) return false;
-    if (search) {
-      const hay = (t.task + t.customer + t.workOrder + t.owner + t.notes).toLowerCase();
-      if (!hay.includes(search)) return false;
-    }
+    if (!matchesSearch(t)) return false;
+
+    // Hide completed unless: toggle is on, explicit filter, or search matched it
+    if (isCompleted(t) && !showCompleted && !explicitStatusIncludesCompleted && !search) return false;
+
     return true;
   });
 
-  const active = filtered.filter(t => t.status !== 'Done' && t.status !== 'Cancelled');
-  const inactive = filtered.filter(t => t.status === 'Done' || t.status === 'Cancelled');
+  const active = filtered.filter(t => !isCompleted(t));
+  const completed = filtered.filter(t => isCompleted(t));
+
   active.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
-  inactive.sort((a, b) => (b.endDate || '').localeCompare(a.endDate || ''));
-  const sorted = [...active, ...inactive];
+  completed.sort((a, b) => (b.endDate || '').localeCompare(a.endDate || ''));
 
   const tbody = document.getElementById('taskBody');
   const empty = document.getElementById('emptyState');
 
-  if (sorted.length === 0) {
+  if (filtered.length === 0) {
     tbody.innerHTML = '';
     empty.style.display = 'block';
+    empty.querySelector('p').innerHTML = search
+      ? `No tasks match <strong>"${esc(search)}"</strong> — completed tasks are also included in search.`
+      : 'No tasks yet. Click <strong>+ New Task</strong> to get started.';
   } else {
     empty.style.display = 'none';
-    tbody.innerHTML = sorted.map(t => `
-      <tr class="${t.status === 'Done' || t.status === 'Cancelled' ? 'done' : ''}">
+
+    const renderRow = (t, isDone) => `
+      <tr class="${isDone ? 'done-shown' : ''}">
         <td>
           <div class="task-name">${esc(t.task)}</div>
           ${t.notes ? '<div class="task-customer" style="margin-top:2px;font-style:italic;">' + esc(t.notes).substring(0, 60) + (t.notes.length > 60 ? '…' : '') + '</div>' : ''}
@@ -608,10 +672,22 @@ function renderTasksFromMemory() {
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+
+    let rows = active.map(t => renderRow(t, false)).join('');
+
+    if (completed.length > 0) {
+      const label = search
+        ? `${completed.length} completed task${completed.length !== 1 ? 's' : ''} matching "${esc(search)}"`
+        : `${completed.length} completed / cancelled`;
+      rows += `<tr class="completed-divider"><td colspan="9">${label}</td></tr>`;
+      rows += completed.map(t => renderRow(t, true)).join('');
+    }
+
+    tbody.innerHTML = rows;
   }
 
-  renderStats(filtered);
+  renderStats(allTasks, active.length, completed.length);
   renderOwnerFilter(allTasks);
 }
 
@@ -624,20 +700,30 @@ function esc(s) {
   return el.innerHTML;
 }
 
-function renderStats(filtered) {
+function renderStats(allT, activeShown, completedShown) {
+  // Stats always reflect all tasks (not just filtered view)
+  const active = allT.filter(t => t.status !== 'Done' && t.status !== 'Cancelled');
   const counts = {
-    total: filtered.length,
-    todo: filtered.filter(t => t.status === 'To Do').length,
-    progress: filtered.filter(t => t.status === 'In Progress').length,
-    waiting: filtered.filter(t => t.status === 'Waiting on Customer' || t.status === 'Waiting on Parts').length,
-    done: filtered.filter(t => t.status === 'Done').length,
+    todo: active.filter(t => t.status === 'To Do').length,
+    progress: active.filter(t => t.status === 'In Progress').length,
+    waiting: active.filter(t => t.status === 'Waiting on Customer' || t.status === 'Waiting on Parts').length,
+    done: allT.filter(t => t.status === 'Done' || t.status === 'Cancelled').length,
   };
+  const shownLabel = typeof activeShown === 'number'
+    ? `<div class="stat-item"><span class="stat-count" style="color:var(--primary)">${activeShown}</span><span class="stat-label">Active</span></div>`
+    : '';
+  const completedLabel = typeof completedShown === 'number' && completedShown > 0
+    ? `<div class="stat-item"><span class="stat-count" style="color:var(--green)">${completedShown}</span><span class="stat-label">Shown Done</span></div>`
+    : '';
   document.getElementById('taskStats').innerHTML = `
-    <div class="stat-item"><span class="stat-count" style="color:var(--primary)">${counts.total}</span><span class="stat-label">Shown</span></div>
+    ${shownLabel}
     <div class="stat-item"><span class="stat-count" style="color:var(--primary)">${counts.todo}</span><span class="stat-label">To Do</span></div>
     <div class="stat-item"><span class="stat-count" style="color:var(--blue)">${counts.progress}</span><span class="stat-label">In Progress</span></div>
     <div class="stat-item"><span class="stat-count" style="color:var(--orange)">${counts.waiting}</span><span class="stat-label">Waiting</span></div>
-    <div class="stat-item"><span class="stat-count" style="color:var(--green)">${counts.done}</span><span class="stat-label">Done</span></div>
+    <div class="stat-item" style="border-left:1px solid var(--border);padding-left:20px;margin-left:4px;">
+      <span class="stat-count" style="color:var(--text-muted)">${counts.done}</span><span class="stat-label">Completed</span>
+    </div>
+    ${completedLabel}
   `;
 }
 
