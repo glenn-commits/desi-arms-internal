@@ -501,6 +501,9 @@ let allTasks = [];
 let isSyncing = false;
 let showCompleted = false;  // completed tasks hidden by default
 
+// Shared helper — must match all completed/cancelled status values from Sheets
+const isCompleted = t => t.status === 'Done' || t.status === 'Cancelled' || t.status === 'Completed';
+
 function toggleCompleted() {
   showCompleted = !showCompleted;
   const btn = document.getElementById('btnToggleCompleted');
@@ -615,8 +618,6 @@ function renderTasksFromMemory() {
   const typeF = document.getElementById('filterType').value;
   const ownerF = document.getElementById('filterOwner').value;
 
-  const isCompleted = t => t.status === 'Done' || t.status === 'Cancelled' || t.status === 'Completed';
-
   // Determine if a task matches the search term
   const matchesSearch = t => {
     if (!search) return true;
@@ -710,18 +711,18 @@ function esc(s) {
 
 function renderStats(allT, activeShown, completedShown) {
   // Stats always reflect all tasks (not just filtered view)
-  const active = allT.filter(t => t.status !== 'Done' && t.status !== 'Cancelled');
+  const active = allT.filter(t => !isCompleted(t));
   const counts = {
-    todo: active.filter(t => t.status === 'To Do').length,
-    progress: active.filter(t => t.status === 'In Progress').length,
-    waiting: active.filter(t => t.status === 'Waiting on Customer' || t.status === 'Waiting on Parts').length,
-    done: allT.filter(t => t.status === 'Done' || t.status === 'Cancelled').length,
+    todo: active.filter(t => t.status === 'To Do' || t.status === 'Not started').length,
+    progress: active.filter(t => t.status === 'In Progress' || t.status === 'In progress').length,
+    waiting: active.filter(t => t.status === 'Waiting on Customer' || t.status === 'Waiting on Parts' || t.status === 'Blocked').length,
+    done: allT.filter(t => isCompleted(t)).length,
   };
   const shownLabel = typeof activeShown === 'number'
     ? `<div class="stat-item"><span class="stat-count" style="color:var(--primary)">${activeShown}</span><span class="stat-label">Active</span></div>`
     : '';
   const completedLabel = typeof completedShown === 'number' && completedShown > 0
-    ? `<div class="stat-item"><span class="stat-count" style="color:var(--green)">${completedShown}</span><span class="stat-label">Shown Done</span></div>`
+    ? `<div class="stat-item"><span class="stat-count" style="color:var(--green)">${completedShown}</span><span class="stat-label">Completed</span></div>`
     : '';
   document.getElementById('taskStats').innerHTML = `
     ${shownLabel}
@@ -729,7 +730,7 @@ function renderStats(allT, activeShown, completedShown) {
     <div class="stat-item"><span class="stat-count" style="color:var(--blue)">${counts.progress}</span><span class="stat-label">In Progress</span></div>
     <div class="stat-item"><span class="stat-count" style="color:var(--orange)">${counts.waiting}</span><span class="stat-label">Waiting</span></div>
     <div class="stat-item" style="border-left:1px solid var(--border);padding-left:20px;margin-left:4px;">
-      <span class="stat-count" style="color:var(--text-muted)">${counts.done}</span><span class="stat-label">Completed</span>
+      <span class="stat-count" style="color:var(--text-muted)">${counts.done}</span><span class="stat-label">${showCompleted ? 'Completed' : 'Completed (hidden)'}</span>
     </div>
     ${completedLabel}
   `;
