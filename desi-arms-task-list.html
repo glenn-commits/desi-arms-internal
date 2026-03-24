@@ -345,15 +345,12 @@
         <div class="filter-label">Status</div>
         <select id="filterStatus" onchange="renderTasks()">
           <option value="">All Statuses</option>
-          <option value="Not started">Not Started</option>
-          <option value="To Do">To Do</option>
+          <option value="Not Started">Not Started</option>
           <option value="In Progress">In Progress</option>
-          <option value="In progress">In Progress (alt)</option>
           <option value="Blocked">Blocked</option>
           <option value="Waiting on Customer">Waiting on Customer</option>
           <option value="Waiting on Parts">Waiting on Parts</option>
           <option value="Completed">Completed</option>
-          <option value="Done">Done</option>
           <option value="Cancelled">Cancelled</option>
         </select>
       </div>
@@ -361,13 +358,13 @@
         <div class="filter-label">Task Type</div>
         <select id="filterType" onchange="renderTasks()">
           <option value="">All Types</option>
-          <option value="Engraving">Engraving</option>
           <option value="Cerakote">Cerakote</option>
-          <option value="Repair">Repair</option>
-          <option value="Transfer / FFL">Transfer / FFL</option>
           <option value="Consignment">Consignment</option>
           <option value="Custom Build">Custom Build</option>
+          <option value="Engraving">Engraving</option>
           <option value="Other">Other</option>
+          <option value="Repair">Repair</option>
+          <option value="Transfer">Transfer</option>
         </select>
       </div>
       <div>
@@ -433,13 +430,13 @@
           <label>Task Type</label>
           <select id="taskType">
             <option value="">Select type…</option>
-            <option value="Engraving">Engraving</option>
             <option value="Cerakote">Cerakote</option>
-            <option value="Repair">Repair</option>
-            <option value="Transfer / FFL">Transfer / FFL</option>
             <option value="Consignment">Consignment</option>
             <option value="Custom Build">Custom Build</option>
+            <option value="Engraving">Engraving</option>
             <option value="Other">Other</option>
+            <option value="Repair">Repair</option>
+            <option value="Transfer">Transfer</option>
           </select>
         </div>
         <div class="form-group">
@@ -457,11 +454,12 @@
         <div class="form-group">
           <label>Status</label>
           <select id="taskStatus">
-            <option value="To Do">To Do</option>
+            <option value="Not Started">Not Started</option>
             <option value="In Progress">In Progress</option>
+            <option value="Blocked">Blocked</option>
             <option value="Waiting on Customer">Waiting on Customer</option>
             <option value="Waiting on Parts">Waiting on Parts</option>
-            <option value="Done">Done</option>
+            <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
         </div>
@@ -501,8 +499,8 @@ let allTasks = [];
 let isSyncing = false;
 let showCompleted = false;  // completed tasks hidden by default
 
-// Shared helper — must match all completed/cancelled status values from Sheets
-const isCompleted = t => t.status === 'Done' || t.status === 'Cancelled' || t.status === 'Completed';
+// Shared helper — completed statuses
+const isCompleted = t => t.status === 'Completed' || t.status === 'Cancelled';
 
 function toggleCompleted() {
   showCompleted = !showCompleted;
@@ -591,16 +589,13 @@ function setSyncStatus(status) {
 // ── Status helpers ──
 function statusClass(s) {
   const map = {
-    'To Do': 'status-todo',
-    'Not started': 'status-todo',
-    'In Progress': 'status-progress',
-    'In progress': 'status-progress',
-    'Blocked': 'status-waiting-customer',
-    'Waiting on Customer': 'status-waiting-customer',
-    'Waiting on Parts': 'status-waiting-parts',
-    'Done': 'status-done',
-    'Completed': 'status-done',
-    'Cancelled': 'status-cancelled'
+    'Not Started':        'status-todo',
+    'In Progress':        'status-progress',
+    'Blocked':            'status-waiting-customer',
+    'Waiting on Customer':'status-waiting-customer',
+    'Waiting on Parts':   'status-waiting-parts',
+    'Completed':          'status-done',
+    'Cancelled':          'status-cancelled',
   };
   return map[s] || 'status-todo';
 }
@@ -626,7 +621,7 @@ function renderTasksFromMemory() {
   };
 
   // Explicit status filter includes completed if user selected Done/Cancelled
-  const explicitStatusIncludesCompleted = statusF === 'Done' || statusF === 'Cancelled' || statusF === 'Completed';
+  const explicitStatusIncludesCompleted = statusF === 'Completed' || statusF === 'Cancelled';
 
   // A task is visible if:
   // 1. It passes all filter dropdowns
@@ -710,29 +705,23 @@ function esc(s) {
 }
 
 function renderStats(allT, activeShown, completedShown) {
-  // Stats always reflect all tasks (not just filtered view)
-  const active = allT.filter(t => !isCompleted(t));
   const counts = {
-    todo: active.filter(t => t.status === 'To Do' || t.status === 'Not started').length,
-    progress: active.filter(t => t.status === 'In Progress' || t.status === 'In progress').length,
-    waiting: active.filter(t => t.status === 'Waiting on Customer' || t.status === 'Waiting on Parts' || t.status === 'Blocked').length,
-    done: allT.filter(t => isCompleted(t)).length,
+    notStarted: allT.filter(t => t.status === 'Not Started').length,
+    inProgress: allT.filter(t => t.status === 'In Progress').length,
+    blocked:    allT.filter(t => t.status === 'Blocked' || t.status === 'Waiting on Customer' || t.status === 'Waiting on Parts').length,
+    completed:  allT.filter(t => isCompleted(t)).length,
   };
-  const shownLabel = typeof activeShown === 'number'
-    ? `<div class="stat-item"><span class="stat-count" style="color:var(--primary)">${activeShown}</span><span class="stat-label">Active</span></div>`
-    : '';
-  const completedLabel = typeof completedShown === 'number' && completedShown > 0
-    ? `<div class="stat-item"><span class="stat-count" style="color:var(--green)">${completedShown}</span><span class="stat-label">Completed</span></div>`
-    : '';
+  const completedLabel = showCompleted
+    ? `<span class="stat-label">Completed</span>`
+    : `<span class="stat-label" style="opacity:0.5;">Completed (hidden)</span>`;
   document.getElementById('taskStats').innerHTML = `
-    ${shownLabel}
-    <div class="stat-item"><span class="stat-count" style="color:var(--primary)">${counts.todo}</span><span class="stat-label">To Do</span></div>
-    <div class="stat-item"><span class="stat-count" style="color:var(--blue)">${counts.progress}</span><span class="stat-label">In Progress</span></div>
-    <div class="stat-item"><span class="stat-count" style="color:var(--orange)">${counts.waiting}</span><span class="stat-label">Waiting</span></div>
+    <div class="stat-item"><span class="stat-count" style="color:var(--primary)">${activeShown}</span><span class="stat-label">Active</span></div>
+    <div class="stat-item"><span class="stat-count" style="color:var(--text-muted)">${counts.notStarted}</span><span class="stat-label">Not Started</span></div>
+    <div class="stat-item"><span class="stat-count" style="color:var(--blue)">${counts.inProgress}</span><span class="stat-label">In Progress</span></div>
+    <div class="stat-item"><span class="stat-count" style="color:var(--orange)">${counts.blocked}</span><span class="stat-label">Blocked / Waiting</span></div>
     <div class="stat-item" style="border-left:1px solid var(--border);padding-left:20px;margin-left:4px;">
-      <span class="stat-count" style="color:var(--text-muted)">${counts.done}</span><span class="stat-label">${showCompleted ? 'Completed' : 'Completed (hidden)'}</span>
+      <span class="stat-count" style="color:var(--green)">${counts.completed}</span>${completedLabel}
     </div>
-    ${completedLabel}
   `;
 }
 
@@ -753,7 +742,7 @@ function openNewTask() {
   document.getElementById('taskCustomer').value = '';
   document.getElementById('taskWO').value = '';
   document.getElementById('taskOwner').value = '';
-  document.getElementById('taskStatus').value = 'To Do';
+  document.getElementById('taskStatus').value = 'Not Started';
   document.getElementById('taskStart').value = new Date().toISOString().split('T')[0];
   document.getElementById('taskEnd').value = '';
   document.getElementById('taskNotes').value = '';
@@ -770,7 +759,7 @@ function editTask(id) {
   document.getElementById('taskCustomer').value = t.customer || '';
   document.getElementById('taskWO').value = t.workOrder || '';
   document.getElementById('taskOwner').value = t.owner || '';
-  document.getElementById('taskStatus').value = t.status || 'To Do';
+  document.getElementById('taskStatus').value = t.status || 'Not Started';
   document.getElementById('taskStart').value = t.startDate || '';
   document.getElementById('taskEnd').value = t.endDate || '';
   document.getElementById('taskNotes').value = t.notes || '';
