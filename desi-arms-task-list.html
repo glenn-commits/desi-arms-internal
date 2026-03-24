@@ -345,10 +345,14 @@
         <div class="filter-label">Status</div>
         <select id="filterStatus" onchange="renderTasks()">
           <option value="">All Statuses</option>
+          <option value="Not started">Not Started</option>
           <option value="To Do">To Do</option>
           <option value="In Progress">In Progress</option>
+          <option value="In progress">In Progress (alt)</option>
+          <option value="Blocked">Blocked</option>
           <option value="Waiting on Customer">Waiting on Customer</option>
           <option value="Waiting on Parts">Waiting on Parts</option>
+          <option value="Completed">Completed</option>
           <option value="Done">Done</option>
           <option value="Cancelled">Cancelled</option>
         </select>
@@ -585,10 +589,14 @@ function setSyncStatus(status) {
 function statusClass(s) {
   const map = {
     'To Do': 'status-todo',
+    'Not started': 'status-todo',
     'In Progress': 'status-progress',
+    'In progress': 'status-progress',
+    'Blocked': 'status-waiting-customer',
     'Waiting on Customer': 'status-waiting-customer',
     'Waiting on Parts': 'status-waiting-parts',
     'Done': 'status-done',
+    'Completed': 'status-done',
     'Cancelled': 'status-cancelled'
   };
   return map[s] || 'status-todo';
@@ -607,7 +615,7 @@ function renderTasksFromMemory() {
   const typeF = document.getElementById('filterType').value;
   const ownerF = document.getElementById('filterOwner').value;
 
-  const isCompleted = t => t.status === 'Done' || t.status === 'Cancelled';
+  const isCompleted = t => t.status === 'Done' || t.status === 'Cancelled' || t.status === 'Completed';
 
   // Determine if a task matches the search term
   const matchesSearch = t => {
@@ -617,7 +625,7 @@ function renderTasksFromMemory() {
   };
 
   // Explicit status filter includes completed if user selected Done/Cancelled
-  const explicitStatusIncludesCompleted = statusF === 'Done' || statusF === 'Cancelled';
+  const explicitStatusIncludesCompleted = statusF === 'Done' || statusF === 'Cancelled' || statusF === 'Completed';
 
   // A task is visible if:
   // 1. It passes all filter dropdowns
