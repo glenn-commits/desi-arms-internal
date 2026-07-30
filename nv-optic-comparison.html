@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     CUSTOMER-FACING TODO — do these before public launch:
+     1. Point CTA links: replace every href="#contact" with the
+        real contact / quote-request URL.
+     2. Confirm LAST_UPDATED (in the <script> data block) is current.
+        NV/thermal pricing moves A LOT (frequent rebates) — re-verify
+        every price and detection figure before going public.
+     3. Confirm the NC night-hunting / night-optic legal language in
+        the legend is still accurate before publishing to customers.
+     4. Decide hosting: embed this same file (or its OPTICS data) on
+        the BigCommerce services page — do NOT fork a second copy.
+     5. (Optional) Add analytics / lead capture on the CTA.
+     Keep this file internal-dashboard-linked until the above are done.
+     ============================================================ -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Night Vision & Thermal Optic Finder — Desi Arms</title>
+<style>
+  /* ============================================================
+     DATA-DRIVEN. All optic data lives in the OPTICS array in the
+     <script> block. Edit specs/prices there; never touch this CSS.
+     Bump LAST_UPDATED when you revise figures.
+     ============================================================ */
+  :root {
+    --ink: #14171a; --steel: #5a6470; --hairline: #d7d9d4;
+    --paper: #f0ede6; --card: #ffffff;
+    --brass: #9a6b2f; --brass-soft: #f2e6d3;
+    --digital: #2f6b6b; --digital-soft: #dcebea;
+    --thermal: #a5482a; --thermal-soft: #f3ddd3;
+    --safe: #3a7a4a; --warn: #b06a1f; --absent: #98602a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--paper); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+  header { border-bottom: 2px solid var(--ink); padding: 36px 0 26px; margin-bottom: 8px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brass); font-weight: 700; margin-bottom: 12px; }
+  h1 { font-family: "Georgia","Times New Roman",serif; font-size: clamp(28px,5vw,46px); font-weight: 700; letter-spacing: -0.01em; line-height: 1.05; }
+  .sub { margin-top: 14px; max-width: 680px; color: var(--steel); font-size: 15.5px; }
+  .meta-row { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12.5px; color: var(--steel); align-items: center; }
+  .stamp { display: inline-flex; align-items: center; gap: 6px; background: var(--brass-soft); color: var(--absent); padding: 4px 10px; border-radius: 3px; font-weight: 600; }
+
+  .finder-banner { background: var(--ink); color: #fff; border-radius: 10px; padding: 26px; margin: 26px 0 8px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .finder-banner .fb-text h2 { font-family: "Georgia",serif; font-size: 22px; margin-bottom: 5px; }
+  .finder-banner .fb-text p { color: #c2c7cd; font-size: 14px; max-width: 480px; }
+  .finder-banner button { background: var(--brass); color: #fff; border: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 15px; padding: 13px 26px; border-radius: 6px; letter-spacing: 0.02em; white-space: nowrap; }
+  .finder-banner button:hover { background: #875c28; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(20,23,26,0.55); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+  .overlay.open { display: flex; }
+  .quiz { background: var(--paper); border-radius: 12px; max-width: 560px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 18px 50px rgba(0,0,0,0.3); }
+  .quiz-head { padding: 22px 26px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .quiz-head .qstep { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brass); font-weight: 700; }
+  .quiz-close { background: none; border: none; font-size: 26px; line-height: 1; color: var(--steel); cursor: pointer; padding: 0; }
+  .progress { height: 4px; background: var(--hairline); border-radius: 3px; margin: 14px 26px 0; overflow: hidden; }
+  .progress span { display: block; height: 100%; background: var(--brass); transition: width 0.25s ease; }
+  .quiz-body { padding: 18px 26px 8px; }
+  .quiz-body h3 { font-family: "Georgia",serif; font-size: 23px; margin-bottom: 4px; line-height: 1.15; }
+  .quiz-body .qhelp { font-size: 13.5px; color: var(--steel); margin-bottom: 18px; }
+  .opt { display: block; width: 100%; text-align: left; background: var(--card); border: 1.5px solid var(--hairline); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; font-family: inherit; transition: all 0.12s ease; }
+  .opt:hover { border-color: var(--steel); }
+  .opt.sel { border-color: var(--brass); background: var(--brass-soft); }
+  .opt .ot { font-weight: 700; font-size: 15px; display: block; }
+  .opt .od { font-size: 12.5px; color: var(--steel); margin-top: 2px; }
+  .opt .check { float: right; width: 20px; height: 20px; border-radius: 5px; border: 1.5px solid var(--hairline); }
+  .opt.sel .check { background: var(--brass); border-color: var(--brass); position: relative; }
+  .opt.sel .check::after { content:"✓"; color:#fff; font-size:13px; position:absolute; top:0; left:4px; font-weight:700; }
+  .multi-hint { font-size: 12px; color: var(--brass); font-weight: 600; margin-bottom: 12px; }
+  .quiz-foot { padding: 8px 26px 24px; display: flex; justify-content: space-between; gap: 12px; }
+  .qbtn { font-family: inherit; font-weight: 700; font-size: 14px; padding: 11px 22px; border-radius: 6px; cursor: pointer; border: none; }
+  .qbtn.ghost { background: none; color: var(--steel); border: 1.5px solid var(--hairline); }
+  .qbtn.prime { background: var(--brass); color: #fff; }
+  .qbtn.prime:disabled { background: var(--hairline); color: var(--steel); cursor: not-allowed; }
+
+  .result { padding: 6px 26px 26px; }
+  .result .rlabel { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brass); font-weight: 700; margin-bottom: 6px; }
+  .rec-card { background: var(--card); border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .rec-top { padding: 18px 20px; border-bottom: 1px solid var(--hairline); }
+  .rec-top .rbrand { font-size: 12px; color: var(--steel); font-weight: 600; }
+  .rec-top .rmodel { font-family: "Georgia",serif; font-size: 22px; font-weight: 700; margin: 2px 0 4px; }
+  .rec-top .rprice { font-size: 14px; color: var(--ink); font-weight: 600; }
+  .rec-why { padding: 14px 20px; font-size: 13.5px; }
+  .rec-why .wt { font-weight: 700; margin-bottom: 4px; }
+  .runner { background: var(--card); border: 1px solid var(--hairline); border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-size: 13px; }
+  .runner b { font-family: "Georgia",serif; }
+  .result-actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+
+  .controls { background: var(--card); border: 1px solid var(--hairline); border-radius: 8px; padding: 20px 22px; margin: 26px 0 14px; }
+  .controls h2 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+  .controls p { font-size: 13px; color: var(--steel); margin-bottom: 16px; }
+  .type-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .type-btn { border: 1.5px solid var(--hairline); background: var(--paper); border-radius: 6px; padding: 12px 16px; cursor: pointer; text-align: left; min-width: 200px; flex: 1; transition: all 0.15s ease; font-family: inherit; }
+  .type-btn:hover { border-color: var(--steel); }
+  .type-btn.active { border-color: var(--brass); background: var(--brass-soft); }
+  .type-btn .hname { font-weight: 700; font-size: 14.5px; display: block; }
+  .type-btn .hdesc { font-size: 12px; color: var(--steel); margin-top: 2px; }
+  .type-btn .check { float: right; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--hairline); display: inline-block; }
+  .type-btn.active .check { background: var(--brass); border-color: var(--brass); position: relative; }
+  .type-btn.active .check::after { content:"✓"; color:#fff; font-size:12px; position:absolute; top:-1px; left:3px; font-weight:700; }
+  .reset { background: none; border: none; color: var(--brass); cursor: pointer; font-size: 12.5px; font-weight: 600; margin-top: 14px; font-family: inherit; text-decoration: underline; padding: 0; }
+
+  .camp { margin: 34px 0; }
+  .camp-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 4px; flex-wrap: wrap; }
+  .camp-tag { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; padding: 3px 9px; border-radius: 3px; color: #fff; }
+  .camp-digital .camp-tag { background: var(--digital); }
+  .camp-thermal .camp-tag { background: var(--thermal); }
+  .camp-head h3 { font-family: "Georgia",serif; font-size: 21px; font-weight: 700; }
+  .camp-note { font-size: 13.5px; color: var(--steel); margin: 6px 0 18px; max-width: 740px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow 0.15s ease; }
+  .card.fit { box-shadow: 0 0 0 2px var(--brass); }
+  .card.dim { opacity: 0.4; }
+  .card-top { padding: 18px 18px 14px; border-bottom: 1px solid var(--hairline); }
+  .card .brand { font-size: 12px; color: var(--steel); font-weight: 600; letter-spacing: 0.03em; }
+  .card .model { font-family: "Georgia",serif; font-size: 19px; font-weight: 700; margin: 2px 0 8px; line-height: 1.15; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; }
+  .badge { font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; }
+  .badge.camp-digital-b { background: var(--digital-soft); color: var(--digital); }
+  .badge.camp-thermal-b { background: var(--thermal-soft); color: var(--thermal); }
+  .badge.tier { background: #ece7de; color: var(--steel); }
+  .badge.fit-badge { background: var(--brass); color: #fff; }
+  .specs { padding: 6px 18px 14px; }
+  .spec { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dotted var(--hairline); font-size: 13.5px; }
+  .spec:last-child { border-bottom: none; }
+  .spec .k { color: var(--steel); }
+  .spec .v { font-weight: 600; text-align: right; }
+  .note-block { padding: 12px 18px 16px; background: var(--paper); border-top: 1px solid var(--hairline); font-size: 13px; }
+  .price-row { padding: 14px 18px; margin-top: auto; border-top: 1px solid var(--hairline); }
+  .price { font-family: "Georgia",serif; font-size: 19px; font-weight: 700; }
+  .price .cur { font-size: 13px; color: var(--steel); font-weight: 400; }
+
+  .legend { background: var(--card); border: 1px solid var(--hairline); border-radius: 8px; padding: 22px; margin: 30px 0; }
+  .legend h3 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+  .legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 24px; }
+  .legend-item { font-size: 13px; display: flex; gap: 9px; align-items: flex-start; }
+  .legend-item .chip { flex-shrink: 0; margin-top: 2px; }
+  .chip { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .disclaimer { font-size: 12.5px; color: var(--steel); line-height: 1.6; border-top: 1px solid var(--hairline); margin-top: 18px; padding-top: 16px; }
+
+  .cta { background: var(--ink); color: #fff; border-radius: 8px; padding: 30px 26px; margin: 30px 0 50px; text-align: center; }
+  .cta h3 { font-family: "Georgia",serif; font-size: 23px; margin-bottom: 8px; }
+  .cta p { color: #c2c7cd; font-size: 14.5px; max-width: 540px; margin: 0 auto 18px; }
+  .cta a { display: inline-block; background: var(--brass); color: #fff; text-decoration: none; font-weight: 700; padding: 12px 26px; border-radius: 6px; font-size: 14.5px; letter-spacing: 0.02em; }
+
+  footer { font-size: 12px; color: var(--steel); padding: 24px 0 40px; text-align: center; }
+
+  @media (max-width: 560px) {
+    .type-btn { min-width: 100%; }
+    .cards { grid-template-columns: 1fr; }
+    .finder-banner button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Desi Arms · Night Vision &amp; Thermal Selection Guide</div>
+    <h1>Night Vision &amp; Thermal Optic Finder</h1>
+    <p class="sub">Digital night vision and thermal rifle scopes across every budget band. New to this? The two technologies do genuinely different jobs — use the guided finder and we'll steer you to the right category first, then the right unit.</p>
+    <div class="meta-row">
+      <span class="stamp">⟳ Specs &amp; pricing last reviewed: <span id="updated"></span></span>
+      <span>Prices are typical retail and move often — confirm current pricing with us.</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="finder-banner">
+    <div class="fb-text">
+      <h2>Not sure where to start?</h2>
+      <p>Digital vs thermal trips up almost every first-time buyer. Answer five quick questions and we'll narrow it down.</p>
+    </div>
+    <button id="openQuiz">Find my optic →</button>
+  </div>
+
+  <div class="controls">
+    <h2>Or browse by type</h2>
+    <p>Filter to the technology you're interested in. Leave both off to see everything.</p>
+    <div class="type-grid" id="typeGrid"></div>
+    <button class="reset" id="resetBtn" style="display:none;">Clear filter</button>
+  </div>
+
+  <div id="campContainer"></div>
+
+  <div class="legend">
+    <h3>Digital NV vs Thermal — the one thing to understand first</h3>
+    <div class="legend-grid">
+      <div class="legend-item"><span class="chip camp-tag" style="background:var(--digital)">Digital NV</span><span>Amplifies existing light to make a recognizable image. You can <strong>identify</strong> your target — read markings, tell buck from doe, confirm it's not a person. Needs some ambient light or an IR illuminator. No export restrictions, no fragile tube.</span></div>
+      <div class="legend-item"><span class="chip camp-tag" style="background:var(--thermal)">Thermal</span><span>Detects heat, not light. <strong>Detects</strong> game through brush, fog, and total darkness where NV sees nothing — but shows a heat blob with less fine detail, so identification is harder. Works in zero light.</span></div>
+      <div class="legend-item"><span class="chip badge tier">Detection</span><span>How far you can tell "something's there." Thermal wins on raw detection distance.</span></div>
+      <div class="legend-item"><span class="chip badge tier">Identification</span><span>How far you can tell <em>what</em> it is. Digital NV and higher-res sensors win here.</span></div>
+    </div>
+    <p class="disclaimer">
+      <strong>The honest short version:</strong> thermal finds things; night vision identifies them. Serious night hunters often run both — thermal to scan and detect, NV or a good day scope to confirm and shoot. If you can only buy one, the right pick depends on whether your problem is <em>finding</em> game in cover (thermal) or <em>identifying</em> and shooting at known ranges (digital NV). <strong>Legal note:</strong> night-hunting and night-optic laws vary by state and by species — it is your responsibility to confirm what's legal where you hunt before buying or using these. We're happy to talk through NC rules with you. Specs and prices shift constantly; treat figures here as directional and confirm current pricing and availability with us.
+    </p>
+  </div>
+
+  <div class="cta">
+    <h3>This is a big-ticket decision — let's get it right</h3>
+    <p>NV and thermal range from a few hundred dollars to five figures, and the wrong pick is an expensive mistake. Come talk it through, see units in person, and let us match the optic to how you actually hunt or shoot.</p>
+    <a href="#contact">Talk to us about night optics</a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">Desi Arms · North Carolina · Full-service FFL: sales, gunsmithing, engraving, range &amp; training</div>
+</footer>
+
+<div class="overlay" id="overlay">
+  <div class="quiz" id="quiz" role="dialog" aria-modal="true" aria-label="Optic finder"></div>
+</div>
+
+<script>
+/* =================================================================
+   EDIT ZONE. LAST_UPDATED: bump when you touch specs/pricing.
+   type = "digital" | "thermal".
+   tier = short label shown as a badge (Entry / Mid / Premium).
+   traits (0-5) drive the finder:
+     identify = fine detail / target ID ability
+     detect   = raw detection distance / seeing through cover
+     range    = effective usable distance
+     value    = performance per dollar
+     features = recording, LRF, ballistic calc, app, etc.
+   useFit (0-5): hog, predator, deer, defense, range
+   priceLow: integer used for budget-band matching
+   ================================================================= */
+
+const LAST_UPDATED = "July 2026";
+
+const OPTICS = [
+  // ---------------- DIGITAL NV ----------------
+  {
+    brand: "ATN", model: "X-Sight LTV 3-9x", type: "digital", tier: "Entry",
+    sensor: "QHD+ digital", res: "day/night HD", mag: "3-9x",
+    detect: "~200 yd (w/ IR)", battery: "~10 hr", record: "No (LTV is stripped-down)",
+    price: "$599", priceLow: 599,
+    note: "Lightest, simplest digital NV. Good first-timer / budget night scope for moderate ranges. No recording or rangefinder — that's the trade for the price and weight.",
+    traits: { identify: 2, detect: 2, range: 2, value: 5, features: 1 },
+    useFit: { hog: 3, predator: 3, deer: 3, defense: 3, range: 3 }
+  },
+  {
+    brand: "Sightmark", model: "Wraith 4K Max 3-24x", type: "digital", tier: "Value",
+    sensor: "4K digital", res: "3840×2160", mag: "3-24x",
+    detect: "~200+ yd (w/ IR)", battery: "~7 hr", record: "Yes (photo/video)",
+    price: "$549 – 649", priceLow: 549,
+    note: "The value night-hunting benchmark. Strong daylight-to-dark performance and 4K recording for the money. A perennial 'best bang for the buck' digital pick.",
+    traits: { identify: 3, detect: 2, range: 3, value: 5, features: 3 },
+    useFit: { hog: 4, predator: 4, deer: 4, defense: 3, range: 4 }
+  },
+  {
+    brand: "ATN", model: "X-Sight 4K Pro 3-14x", type: "digital", tier: "Mid",
+    sensor: "4K Ultra-HD digital", res: "3840×2160", mag: "3-14x",
+    detect: "~300 yd (w/ IR)", battery: "~10-16 hr", record: "Yes + recoil-activated (RAV)",
+    price: "$549 – 699", priceLow: 549,
+    note: "The do-everything crowd favorite: 4K sensor, ballistic calculator, WiFi streaming, recoil-activated video. Best all-around value for a hunter who wants one unit for day and night.",
+    traits: { identify: 4, detect: 3, range: 3, value: 5, features: 5 },
+    useFit: { hog: 4, predator: 4, deer: 5, defense: 3, range: 4 }
+  },
+  {
+    brand: "ATN", model: "X-Sight 5 LRF 5-25x", type: "digital", tier: "Premium",
+    sensor: "4K+ (highest consumer res)", res: "3840×2160+", mag: "5-25x",
+    detect: "~350+ yd (w/ IR)", battery: "~18 hr", record: "Yes + RAV, built-in laser rangefinder",
+    price: "$949 – 1,100", priceLow: 949,
+    note: "ATN's flagship: highest sensor resolution on the consumer market, integrated LRF, Bluetooth ballistics, 18-hr battery. For the digital buyer who wants identification range and every smart feature.",
+    traits: { identify: 5, detect: 3, range: 4, value: 3, features: 5 },
+    useFit: { hog: 4, predator: 4, deer: 5, defense: 3, range: 5 }
+  },
+  {
+    brand: "Pulsar", model: "Digex C50", type: "digital", tier: "Premium",
+    sensor: "CMOS digital NV module", res: "1024×768 @ 50Hz", mag: "scope-style optical + digital",
+    detect: "~350 m (large targets)", battery: "~7-8 hr (IPS5)", record: "Yes + WiFi (Stream Vision)",
+    price: "$1,000 – 1,300", priceLow: 1000,
+    note: "Best build quality in digital NV. 50Hz sensor tracks fast movers more smoothly than 30fps units, and it shares Pulsar's battery/accessory ecosystem. The pick if you value refinement and already run Pulsar.",
+    traits: { identify: 4, detect: 3, range: 4, value: 3, features: 4 },
+    useFit: { hog: 4, predator: 5, deer: 4, defense: 4, range: 4 }
+  },
+
+  // ---------------- THERMAL ----------------
+  {
+    brand: "AGM", model: "Rattler V2 (256)", type: "thermal", tier: "Entry",
+    sensor: "256×192 thermal", res: "256×192", mag: "low base + digital",
+    detect: "detects heat in total darkness / through brush", battery: "~6 hr", record: "Yes",
+    price: "$1,300 – 1,700", priceLow: 1300,
+    note: "The value entry into true thermal. Detects game through cover and in zero light where no NV can. Lower resolution means it's a detection tool first — identification at distance is limited. Short battery life on long hunts.",
+    traits: { identify: 2, detect: 5, range: 3, value: 4, features: 3 },
+    useFit: { hog: 5, predator: 5, deer: 3, defense: 4, range: 2 }
+  },
+  {
+    brand: "ATN", model: "ThOR 4 384 2-8x", type: "thermal", tier: "Mid",
+    sensor: "384×288 thermal", res: "384×288", mag: "2-8x",
+    detect: "strong mid-range detection, any light", battery: "~10+ hr", record: "Yes + RAV, ballistic calc",
+    price: "$1,900 – 2,400", priceLow: 1900,
+    note: "The mid-tier thermal workhorse and a top pick for hog/predator work. Better resolution than entry thermal for real identification, ATN's smart-feature suite, and much better battery life than the entry AGM.",
+    traits: { identify: 3, detect: 5, range: 4, value: 4, features: 5 },
+    useFit: { hog: 5, predator: 5, deer: 4, defense: 4, range: 3 }
+  },
+  {
+    brand: "ATN", model: "ThOR 5 LRF 320", type: "thermal", tier: "Premium",
+    sensor: "320×240 thermal + LRF", res: "320×240", mag: "5-20x",
+    detect: "long-range detection + integrated rangefinder", battery: "~long", record: "Yes + LRF, ballistic calc",
+    price: "$2,195 – 2,600", priceLow: 2195,
+    note: "Thermal with a built-in laser rangefinder and ballistic solving — for the hunter who wants first-round hits at distance in the dark without a separate rangefinder. Strong all-round premium thermal.",
+    traits: { identify: 3, detect: 5, range: 5, value: 3, features: 5 },
+    useFit: { hog: 5, predator: 5, deer: 4, defense: 4, range: 4 }
+  },
+  {
+    brand: "AGM", model: "Rattler V2 (640) / Spectrum", type: "thermal", tier: "Premium",
+    sensor: "640×512 thermal", res: "640×512", mag: "high base + digital",
+    detect: "class-leading detection + identification", battery: "~7 hr", record: "Yes",
+    price: "$3,500 – 5,000", priceLow: 3500,
+    note: "High-resolution 640 thermal — the top of what this guide covers. Detection and identification both excel; this is where thermal stops being 'just a heat blob.' Premium price for premium sensor.",
+    traits: { identify: 4, detect: 5, range: 5, value: 2, features: 4 },
+    useFit: { hog: 5, predator: 5, deer: 5, defense: 5, range: 4 }
+  }
+];
+
+const CAMPS = [
+  { id: "digital", tag: "Digital night vision", title: "Digital NV — identify and shoot",
+    note: "Light-amplifying digital scopes. You can tell what you're looking at — critical for legal, ethical, and safe target ID. Needs some ambient light or an IR illuminator (most include one). No export restrictions and no fragile intensifier tube. Ranges here from a sub-$600 first scope up to ATN's and Pulsar's feature-loaded flagships." },
+  { id: "thermal", tag: "Thermal imaging", title: "Thermal — detect through anything",
+    note: "Heat-sensing scopes that find game through brush, fog, and total darkness where NV sees nothing. The trade is detail: lower-res thermal shows a heat signature, not a clear picture, so identification is harder and pricier. Resolution (256 → 384 → 640) is what you're paying for as you move up." }
+];
+
+const QUESTIONS = [
+  {
+    key: "goal", multi: false,
+    title: "What's the main problem you're solving?",
+    help: "This is the big fork — it decides thermal vs digital more than anything else.",
+    options: [
+      { val: "detect", t: "Finding game I can't see", d: "Hogs/predators in brush, fields, total dark → leans thermal" },
+      { val: "identify", t: "Identifying &amp; shooting targets", d: "Confirm what it is at known ranges → leans digital NV" },
+      { val: "both", t: "Both — I want to scan and shoot", d: "Serious night hunter, may end up running two" },
+      { val: "unsure", t: "Not sure yet", d: "Help me understand the trade-off" }
+    ]
+  },
+  {
+    key: "quarry", multi: false,
+    title: "What are you mostly after?",
+    help: "Your primary quarry or use — not the rare exception.",
+    options: [
+      { val: "hog", t: "Hogs", d: "Often in cover, at night, need to detect" },
+      { val: "predator", t: "Predators (coyote, etc.)", d: "Calling at night, moving targets" },
+      { val: "deer", t: "Deer / general hunting", d: "ID matters, often legal-light hours" },
+      { val: "defense", t: "Property / defensive", d: "Rare use, PID matters most" },
+      { val: "range", t: "Range &amp; general shooting", d: "Fun, practice, not species-specific" }
+    ]
+  },
+  {
+    key: "range", multi: false,
+    title: "How far are your typical shots?",
+    help: "Realistic distances, not best-case.",
+    options: [
+      { val: "close", t: "Inside ~100 yards", d: "Most entry units handle this fine" },
+      { val: "mid", t: "100–250 yards", d: "Wants better sensor / resolution" },
+      { val: "far", t: "250+ yards", d: "Needs high-res + rangefinder" }
+    ]
+  },
+  {
+    key: "features", multi: false,
+    title: "How much do smart features matter?",
+    help: "Recording, WiFi streaming, ballistic calculator, built-in rangefinder.",
+    options: [
+      { val: "lots", t: "Load it up", d: "Recording, LRF, ballistics — I'll use them" },
+      { val: "some", t: "Nice to have", d: "Won't pay a big premium for them" },
+      { val: "min", t: "Just a good image", d: "Keep it simple and cheaper" }
+    ]
+  },
+  {
+    key: "budget", multi: false,
+    title: "What's your budget?",
+    help: "Optic only. Remember an IR illuminator or mount may be extra.",
+    options: [
+      { val: "b1", t: "Under $700", d: "Entry digital NV territory" },
+      { val: "b2", t: "$700 – 1,300", d: "Premium digital or entry thermal" },
+      { val: "b3", t: "$1,300 – 2,500", d: "Mid thermal, feature-rich" },
+      { val: "b4", t: "$2,500+", d: "Premium / high-res thermal" }
+    ]
+  }
+];
+
+/* ---------- render ---------- */
+document.getElementById("updated").textContent = LAST_UPDATED;
+
+let typeFilter = new Set();
+const typeGrid = document.getElementById("typeGrid");
+[{id:"digital",name:"Digital night vision",desc:"Identify targets · $549–1,300"},
+ {id:"thermal",name:"Thermal imaging",desc:"Detect heat · $1,300–5,000"}].forEach(tp => {
+  const b = document.createElement("button");
+  b.className = "type-btn"; b.dataset.id = tp.id;
+  b.innerHTML = `<span class="check"></span><span class="hname">${tp.name}</span><span class="hdesc">${tp.desc}</span>`;
+  b.addEventListener("click", () => {
+    typeFilter.has(tp.id) ? typeFilter.delete(tp.id) : typeFilter.add(tp.id);
+    b.classList.toggle("active");
+    document.getElementById("resetBtn").style.display = typeFilter.size ? "block" : "none";
+    render();
+  });
+  typeGrid.appendChild(b);
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  typeFilter.clear();
+  document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("resetBtn").style.display = "none";
+  render();
+});
+
+function card(s) {
+  const campB = s.type === "digital" ? "camp-digital-b" : "camp-thermal-b";
+  const campLabel = s.type === "digital" ? "Digital NV" : "Thermal";
+  return `
+  <div class="card">
+    <div class="card-top">
+      <span class="brand">${s.brand}</span>
+      <div class="model">${s.model}</div>
+      <div class="badges">
+        <span class="badge ${campB}">${campLabel}</span>
+        <span class="badge tier">${s.tier}</span>
+      </div>
+    </div>
+    <div class="specs">
+      <div class="spec"><span class="k">Sensor</span><span class="v">${s.sensor}</span></div>
+      <div class="spec"><span class="k">Resolution</span><span class="v">${s.res}</span></div>
+      <div class="spec"><span class="k">Magnification</span><span class="v">${s.mag}</span></div>
+      <div class="spec"><span class="k">Detection</span><span class="v">${s.detect}</span></div>
+      <div class="spec"><span class="k">Battery</span><span class="v">${s.battery}</span></div>
+      <div class="spec"><span class="k">Recording</span><span class="v">${s.record}</span></div>
+    </div>
+    <div class="note-block">${s.note}</div>
+    <div class="price-row"><span class="price"><span class="cur">approx. </span>${s.price}</span></div>
+  </div>`;
+}
+
+function render() {
+  document.getElementById("campContainer").innerHTML = CAMPS.map(c => {
+    if (typeFilter.size && !typeFilter.has(c.id)) return "";
+    const items = OPTICS.filter(s => s.type === c.id);
+    return `
+    <section class="camp camp-${c.id}">
+      <div class="camp-head"><span class="camp-tag">${c.tag}</span><h3>${c.title}</h3></div>
+      <p class="camp-note">${c.note}</p>
+      <div class="cards">${items.map(card).join("")}</div>
+    </section>`;
+  }).join("");
+}
+render();
+
+/* ---------- finder ---------- */
+const overlay = document.getElementById("overlay");
+const quizEl = document.getElementById("quiz");
+let qIdx = 0;
+let answers = { goal: null, quarry: null, range: null, features: null, budget: null };
+
+document.getElementById("openQuiz").addEventListener("click", openQuiz);
+overlay.addEventListener("click", e => { if (e.target === overlay) closeQuiz(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeQuiz(); });
+
+function openQuiz() {
+  qIdx = 0;
+  answers = { goal: null, quarry: null, range: null, features: null, budget: null };
+  overlay.classList.add("open");
+  drawQuestion();
+}
+function closeQuiz() { overlay.classList.remove("open"); }
+
+function drawQuestion() {
+  const q = QUESTIONS[qIdx];
+  const cur = answers[q.key];
+  const pct = Math.round((qIdx / QUESTIONS.length) * 100);
+  const opts = q.options.map(o =>
+    `<button class="opt ${cur === o.val ? "sel" : ""}" data-val="${o.val}">
+      <span class="check"></span><span class="ot">${o.t}</span><span class="od">${o.d}</span></button>`).join("");
+  quizEl.innerHTML = `
+    <div class="quiz-head">
+      <span class="qstep">Step ${qIdx + 1} of ${QUESTIONS.length}</span>
+      <button class="quiz-close" aria-label="Close">×</button>
+    </div>
+    <div class="progress"><span style="width:${pct}%"></span></div>
+    <div class="quiz-body">
+      <h3>${q.title}</h3>
+      <p class="qhelp">${q.help}</p>
+      ${opts}
+    </div>
+    <div class="quiz-foot">
+      <button class="qbtn ghost" data-act="back">${qIdx === 0 ? "Cancel" : "← Back"}</button>
+      <button class="qbtn prime" data-act="next" ${cur ? "" : "disabled"}>
+        ${qIdx === QUESTIONS.length - 1 ? "See my match" : "Next →"}</button>
+    </div>`;
+  quizEl.querySelector(".quiz-close").addEventListener("click", closeQuiz);
+  quizEl.querySelectorAll(".opt").forEach(btn => {
+    btn.addEventListener("click", () => { answers[q.key] = btn.dataset.val; drawQuestion(); });
+  });
+  quizEl.querySelector('[data-act="back"]').addEventListener("click", () => {
+    if (qIdx === 0) return closeQuiz();
+    qIdx--; drawQuestion();
+  });
+  quizEl.querySelector('[data-act="next"]').addEventListener("click", () => {
+    if (qIdx === QUESTIONS.length - 1) return showResult();
+    qIdx++; drawQuestion();
+  });
+}
+
+function scoreAll() {
+  const a = answers;
+  return OPTICS.map(s => {
+    let score = 0;
+    const t = s.traits;
+
+    // GOAL — the big fork: steer thermal vs digital
+    if (a.goal === "detect") score += s.type === "thermal" ? 14 : 0, score += t.detect * 2;
+    else if (a.goal === "identify") score += s.type === "digital" ? 14 : 0, score += t.identify * 2;
+    else if (a.goal === "both") score += t.detect * 1.5 + t.identify * 1.5;
+    else if (a.goal === "unsure") score += t.value * 2 + t.identify * 1; // nudge toward approachable digital
+
+    // quarry fit
+    if (a.quarry && s.useFit[a.quarry] != null) score += s.useFit[a.quarry] * 2.5;
+
+    // range needs
+    if (a.range === "close") score += 3; // everything works; slight flat credit
+    else if (a.range === "mid") score += t.range * 1.5;
+    else if (a.range === "far") score += t.range * 3 + (s.record.includes("rangefinder") || s.model.includes("LRF") ? 4 : 0);
+
+    // features
+    if (a.features === "lots") score += t.features * 2.5;
+    else if (a.features === "some") score += t.features * 0.8;
+    else if (a.features === "min") score += (5 - t.features) * 1.0 + t.value * 1.5;
+
+    // budget band alignment (hard-ish gates so we don't recommend out of range)
+    const p = s.priceLow;
+    if (a.budget === "b1") score += p < 700 ? 10 : p < 1000 ? 1 : -12;
+    else if (a.budget === "b2") score += (p >= 549 && p <= 1300) ? 8 : p < 1900 ? 1 : -10;
+    else if (a.budget === "b3") score += (p >= 1300 && p <= 2500) ? 9 : (p >= 900 ? 2 : -3);
+    else if (a.budget === "b4") score += p >= 2500 ? 9 : p >= 1900 ? 4 : 0;
+
+    return { s, score };
+  }).sort((x, y) => y.score - x.score);
+}
+
+function reasonFor(s, a) {
+  const bits = [];
+  if (a.goal === "detect" && s.type === "thermal") bits.push("thermal finds heat through brush and total darkness, which is what you're after");
+  if (a.goal === "identify" && s.type === "digital") bits.push("digital NV lets you clearly identify your target before the shot");
+  if (a.goal === "both") bits.push(s.type === "thermal" ? "strong for the detection half of a scan-and-shoot setup" : "strong for the identify-and-shoot half of a scan-and-shoot setup");
+  if (a.quarry === "hog" && s.useFit.hog >= 5) bits.push("a proven hog-hunting choice");
+  if (a.quarry === "predator" && s.useFit.predator >= 5) bits.push("well suited to night predator work");
+  if (a.quarry === "deer" && s.useFit.deer >= 5) bits.push("the detail to identify deer at legal light");
+  if (a.range === "far" && (s.model.includes("LRF") || s.record.includes("rangefinder"))) bits.push("built-in rangefinder helps first-round hits at distance");
+  if (a.features === "lots" && s.traits.features >= 5) bits.push("loaded with recording, ballistics, and smart features");
+  if (a.features === "min" && s.traits.value >= 4) bits.push("keeps it simple and affordable");
+  if (a.budget === "b1" && s.priceLow < 700) bits.push("fits your budget");
+  if (bits.length === 0) bits.push("a solid match for what you told us");
+  return bits.slice(0, 3).join(", ") + ".";
+}
+
+function showResult() {
+  const ranked = scoreAll();
+  const top = ranked[0].s;
+  const runners = ranked.slice(1, 3).map(r => r.s);
+  const a = answers;
+  const reason = reasonFor(top, a);
+  const cap = reason.charAt(0).toUpperCase() + reason.slice(1);
+
+  // contextual note if goal was 'both'
+  const bothNote = a.goal === "both"
+    ? `<p style="font-size:12.5px;color:var(--steel);margin:2px 0 14px;line-height:1.5;">You said you want to both scan and shoot — a lot of serious night hunters end up running a thermal for detection <em>and</em> a digital NV or day scope for the shot. Worth talking through whether one unit or two fits your budget.</p>`
+    : "";
+
+  quizEl.innerHTML = `
+    <div class="quiz-head">
+      <span class="qstep">Your match</span>
+      <button class="quiz-close" aria-label="Close">×</button>
+    </div>
+    <div class="progress"><span style="width:100%"></span></div>
+    <div class="result">
+      <div class="rlabel">Best fit for your answers</div>
+      <div class="rec-card">
+        <div class="rec-top">
+          <div class="rbrand">${top.brand} · ${top.type === "digital" ? "Digital NV" : "Thermal"} · ${top.tier}</div>
+          <div class="rmodel">${top.model}</div>
+          <div class="rprice">approx. ${top.price}</div>
+        </div>
+        <div class="rec-why"><div class="wt">Why this one</div>${cap}</div>
+      </div>
+      ${bothNote}
+      <div class="rlabel">Also worth a look</div>
+      ${runners.map(r => `<div class="runner"><b>${r.brand} ${r.model}</b> <span style="color:var(--steel)">(${r.type === "digital" ? "Digital" : "Thermal"}, ${r.price})</span> — ${r.note.split(".")[0]}.</div>`).join("")}
+      <div class="result-actions">
+        <button class="qbtn ghost" data-act="restart">Start over</button>
+        <a class="qbtn prime" style="text-decoration:none;" href="#contact">Ask us about the ${top.model}</a>
+      </div>
+      <p style="font-size:11.5px;color:var(--steel);margin-top:14px;line-height:1.5;">
+        A starting point, not the final word — sensor resolution, your rifle's recoil rating, IR illuminator needs, and your state's night-hunting laws all matter. Come see units in person and we'll confirm the right fit.
+      </p>
+    </div>`;
+  quizEl.querySelector(".quiz-close").addEventListener("click", closeQuiz);
+  quizEl.querySelector('[data-act="restart"]').addEventListener("click", openQuiz);
+}
+</script>
+
+</body>
+</html>
