@@ -1,10 +1,22 @@
 <!DOCTYPE html>
+<!-- ============================================================
+     CUSTOMER-FACING TODO — do these before public launch:
+     1. Point CTA links: replace every href="#contact" with the
+        real contact / quote-request / class-registration URL.
+     2. Confirm LAST_UPDATED (in the <script> data block) is current;
+        re-verify all prices and any dB figures before going public.
+     3. Decide hosting: embed this same file (or its OPTICS/SUPPRESSORS
+        data) on the BigCommerce services page — do NOT fork a second
+        copy. One source of truth.
+     4. Remove or repoint the footer if the public site has its own.
+     5. (Optional) Add analytics / lead capture on the CTA.
+     Keep this file internal-dashboard-linked until the above are done.
+     ============================================================ -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Suppressor Comparison — Desi Arms</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet"/>
+<title>30 Cal Suppressor Finder — Desi Arms</title>
 <style>
   /* ============================================================
      DATA-DRIVEN DISPLAY. All suppressor data lives in the
@@ -13,48 +25,28 @@
      Bump LAST_UPDATED in the script when you revise figures.
      ============================================================ */
   :root {
-    /* Desi Arms brand system: navy + red on warm paper */
-    --ink: #1a2a3a; --steel: #6b7280; --hairline: #d4cfc7;
-    --paper: #f5f2ed; --card: #ffffff;
-    --brass: #D32434; --brass-soft: #f7dcdf;   /* accent -> brand red */
-    --flow: #2e4057; --flow-soft: #dde3ea;      /* camp accents kept navy-family + red */
-    --quiet: #1a2a3a; --quiet-soft: #dfe3e8;
-    --value: #a01c28; --value-soft: #f3d9dc;
-    --budget: #5a6470; --budget-soft: #e3e5e2;
-    --safe: #1a8a50; --warn: #a01c28; --absent: #a01c28;
+    --ink: #14171a; --steel: #5a6470; --hairline: #d7d9d4;
+    --paper: #f0ede6; --card: #ffffff;
+    --brass: #9a6b2f; --brass-soft: #f2e6d3;
+    --flow: #2f6b6b; --flow-soft: #dcebea;
+    --quiet: #5a4a7a; --quiet-soft: #e7e1f0;
+    --value: #8a6d1f; --value-soft: #f1e9cf;
+    --budget: #6b5544; --budget-soft: #e8ded4;
+    --safe: #3a7a4a; --warn: #b06a1f; --absent: #98602a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--ink); background: var(--paper); line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
 
-  header { border-bottom: 2px solid var(--ink); padding: 32px 0 26px; margin-bottom: 8px; text-align: center; }
-  header .wrap { position: relative; }
-  .back-link {
-    position: absolute; top: 0; right: 20px;
-    color: var(--steel); text-decoration: none;
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 13px; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.06em;
-    border: 1px solid var(--hairline); padding: 7px 18px;
-    border-radius: 6px;
-    transition: all 0.2s; white-space: nowrap;
-  }
-  .back-link:hover { border-color: var(--brass); color: var(--brass); }
-  @media (max-width: 600px) {
-    .back-link { position: static; display: inline-block; margin-bottom: 18px; }
-  }
-  .logo-wrapper { margin-bottom: 6px; }
-  .logo-wrapper img { max-width: 240px; height: auto; }
-  .tagline { text-align: center; font-family: "Barlow Condensed", sans-serif; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--steel); font-weight: 600; margin-bottom: 16px; }
-  .red-rule { width: 60px; height: 3px; background: var(--brass); margin: 14px auto 16px; border-radius: 2px; }
-  .eyebrow { font-family: "Barlow Condensed", sans-serif; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brass); font-weight: 700; margin-bottom: 10px; }
-  h1 { font-family: "Barlow Condensed", sans-serif; font-size: clamp(30px,5vw,48px); font-weight: 700; letter-spacing: 0.02em; line-height: 1.05; text-transform: uppercase; color: var(--ink); }
-  .sub { margin: 14px auto 0; max-width: 660px; color: var(--steel); font-size: 15.5px; }
-  .meta-row { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12.5px; color: var(--steel); align-items: center; justify-content: center; }
+  header { border-bottom: 2px solid var(--ink); padding: 36px 0 26px; margin-bottom: 8px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brass); font-weight: 700; margin-bottom: 12px; }
+  h1 { font-family: "Georgia","Times New Roman",serif; font-size: clamp(28px,5vw,46px); font-weight: 700; letter-spacing: -0.01em; line-height: 1.05; }
+  .sub { margin-top: 14px; max-width: 660px; color: var(--steel); font-size: 15.5px; }
+  .meta-row { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12.5px; color: var(--steel); align-items: center; }
   .stamp { display: inline-flex; align-items: center; gap: 6px; background: var(--brass-soft); color: var(--absent); padding: 4px 10px; border-radius: 3px; font-weight: 600; }
 
   /* ---- First-time CTA banner ---- */
@@ -63,14 +55,14 @@
     padding: 26px 26px; margin: 26px 0 8px; display: flex;
     align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
   }
-  .finder-banner .fb-text h2 { font-family: "Barlow Condensed",sans-serif; font-size: 24px; text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 5px; }
+  .finder-banner .fb-text h2 { font-family: "Georgia",serif; font-size: 22px; margin-bottom: 5px; }
   .finder-banner .fb-text p { color: #c2c7cd; font-size: 14px; max-width: 460px; }
   .finder-banner button {
     background: var(--brass); color: #fff; border: none; cursor: pointer;
     font-family: inherit; font-weight: 700; font-size: 15px; padding: 13px 26px;
     border-radius: 6px; letter-spacing: 0.02em; white-space: nowrap;
   }
-  .finder-banner button:hover { background: var(--value); }
+  .finder-banner button:hover { background: #875c28; }
 
   /* ---- Quiz modal ---- */
   .overlay {
@@ -88,7 +80,7 @@
   .progress { height: 4px; background: var(--hairline); border-radius: 3px; margin: 14px 26px 0; overflow: hidden; }
   .progress span { display: block; height: 100%; background: var(--brass); transition: width 0.25s ease; }
   .quiz-body { padding: 18px 26px 8px; }
-  .quiz-body h3 { font-family: "Barlow Condensed",sans-serif; font-size: 23px; margin-bottom: 4px; line-height: 1.15; }
+  .quiz-body h3 { font-family: "Georgia",serif; font-size: 23px; margin-bottom: 4px; line-height: 1.15; }
   .quiz-body .qhelp { font-size: 13.5px; color: var(--steel); margin-bottom: 18px; }
   .opt {
     display: block; width: 100%; text-align: left; background: var(--card);
@@ -115,12 +107,12 @@
   .rec-card { background: var(--card); border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
   .rec-top { padding: 18px 20px; border-bottom: 1px solid var(--hairline); }
   .rec-top .rbrand { font-size: 12px; color: var(--steel); font-weight: 600; }
-  .rec-top .rmodel { font-family: "Barlow Condensed",sans-serif; font-size: 22px; font-weight: 700; margin: 2px 0 4px; }
+  .rec-top .rmodel { font-family: "Georgia",serif; font-size: 22px; font-weight: 700; margin: 2px 0 4px; }
   .rec-top .rprice { font-size: 14px; color: var(--ink); font-weight: 600; }
   .rec-why { padding: 14px 20px; font-size: 13.5px; }
   .rec-why .wt { font-weight: 700; margin-bottom: 4px; }
   .runner { background: var(--card); border: 1px solid var(--hairline); border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; font-size: 13px; }
-  .runner b { font-family: "Barlow Condensed",sans-serif; }
+  .runner b { font-family: "Georgia",serif; }
   .result-actions { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
 
   /* ---- Host filter ---- */
@@ -146,7 +138,7 @@
   .camp-quiet .camp-tag { background: var(--quiet); }
   .camp-value .camp-tag { background: var(--value); }
   .camp-budget .camp-tag { background: var(--budget); }
-  .camp-head h3 { font-family: "Barlow Condensed",sans-serif; font-size: 21px; font-weight: 700; }
+  .camp-head h3 { font-family: "Georgia",serif; font-size: 21px; font-weight: 700; }
   .camp-note { font-size: 13.5px; color: var(--steel); margin: 6px 0 18px; max-width: 720px; }
 
   /* ---- Cards ---- */
@@ -156,7 +148,7 @@
   .card.dim { opacity: 0.4; }
   .card-top { padding: 18px 18px 14px; border-bottom: 1px solid var(--hairline); }
   .card .brand { font-size: 12px; color: var(--steel); font-weight: 600; letter-spacing: 0.03em; }
-  .card .model { font-family: "Barlow Condensed",sans-serif; font-size: 19px; font-weight: 700; margin: 2px 0 8px; line-height: 1.15; }
+  .card .model { font-family: "Georgia",serif; font-size: 19px; font-weight: 700; margin: 2px 0 8px; line-height: 1.15; }
   .badges { display: flex; flex-wrap: wrap; gap: 6px; }
   .badge { font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 7px; border-radius: 3px; }
   .badge.camp-flow-b { background: var(--flow-soft); color: var(--flow); }
@@ -180,7 +172,7 @@
   .src.claimed { background: #faf0dc; color: var(--warn); }
   .src.none { background: #f2e0e0; color: #9a3a3a; }
   .price-row { padding: 14px 18px; margin-top: auto; border-top: 1px solid var(--hairline); }
-  .price { font-family: "Barlow Condensed",sans-serif; font-size: 19px; font-weight: 700; }
+  .price { font-family: "Georgia",serif; font-size: 19px; font-weight: 700; }
   .price .cur { font-size: 13px; color: var(--steel); font-weight: 400; }
 
   /* ---- Legend ---- */
@@ -193,7 +185,7 @@
   .disclaimer { font-size: 12.5px; color: var(--steel); line-height: 1.6; border-top: 1px solid var(--hairline); margin-top: 18px; padding-top: 16px; }
 
   .cta { background: var(--ink); color: #fff; border-radius: 8px; padding: 30px 26px; margin: 30px 0 50px; text-align: center; }
-  .cta h3 { font-family: "Barlow Condensed",sans-serif; font-size: 23px; margin-bottom: 8px; }
+  .cta h3 { font-family: "Georgia",serif; font-size: 23px; margin-bottom: 8px; }
   .cta p { color: #c2c7cd; font-size: 14.5px; max-width: 520px; margin: 0 auto 18px; }
   .cta a { display: inline-block; background: var(--brass); color: #fff; text-decoration: none; font-weight: 700; padding: 12px 26px; border-radius: 6px; font-size: 14.5px; letter-spacing: 0.02em; }
 
@@ -210,15 +202,9 @@
 
 <header>
   <div class="wrap">
-    <a href="index.html" class="back-link">← Dashboard</a>
-    <div class="logo-wrapper">
-      <img src="https://desiarms.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.svg" onerror="this.src='https://desiarms.github.io/desi-arms-assets/Desi%20Arms%20FULL%20COLOR.png'" alt="Desi Arms"/>
-    </div>
-    <div class="tagline">— We've Got Your Six —</div>
-    <div class="red-rule"></div>
-    <div class="eyebrow">Suppressor Selection Guide</div>
-    <h1>Suppressor Comparison</h1>
-    <p class="sub">Currently covering eight .30 cal cans, sorted by the trade-off that actually matters when one suppressor serves several rifles. New to suppressors? Use the guided picker — a few plain questions and we'll point you to the right can.</p>
+    <div class="eyebrow">Desi Arms · Suppressor Selection Guide</div>
+    <h1>30 Caliber Suppressor Finder</h1>
+    <p class="sub">Eight current .30 cal cans, sorted by the trade-off that actually matters when one suppressor serves several rifles. New to suppressors? Use the guided finder — a few plain questions and we'll point you to the right can.</p>
     <div class="meta-row">
       <span class="stamp">⟳ Specs &amp; pricing last reviewed: <span id="updated"></span></span>
       <span>Sound data from independent labs where available — see methodology below.</span>
@@ -263,7 +249,7 @@
   <div class="cta">
     <h3>Not sure which fits your build?</h3>
     <p>We stock, mount, and process the paperwork in-house. Bring your hosts in or send us your setup and we'll narrow it to the right can — and handle the Form 4 from start to finish.</p>
-    <a href="mailto:sales@desiarms.com?subject=Suppressor%20inquiry">Talk to us about your build</a>
+    <a href="#contact">Talk to us about your build</a>
   </div>
 
 </div>
@@ -293,7 +279,7 @@
    useFit: bonus points for use cases (range/hunt/tactical/precision)
    ================================================================= */
 
-const LAST_UPDATED = "July 2026";
+const LAST_UPDATED = "June 2026";
 
 const HOSTS = [
   { id: "mk18", name: "DD MK18 — 300 BLK", desc: "Short barrel, direct-impingement, supers + subs" },
@@ -312,7 +298,7 @@ const SUPPRESSORS = [
     price: "$1,150 – 1,200", note: "Comes with QD muzzle brake.",
     hosts: ["mk18","scar","r308"],
     traits: { quiet: 4, lowbp: 5, light: 5, value: 2, durable: 5 },
-    useFit: { range: 4, hunt: 4, tactical: 5, precision: 3 }
+    useFit: { range: 4, hunt: 4, tactical: 5, precision: 3, nv: 5 }
   },
   {
     brand: "SIG Sauer", model: "HEXIUM 762 Ti", camp: "flow",
@@ -324,7 +310,7 @@ const SUPPRESSORS = [
     price: "$899", note: "HUB-compatible; modular end cap.",
     hosts: ["mk18","scar","r308"],
     traits: { quiet: 3, lowbp: 5, light: 5, value: 4, durable: 4 },
-    useFit: { range: 4, hunt: 4, tactical: 5, precision: 3 }
+    useFit: { range: 4, hunt: 4, tactical: 5, precision: 3, nv: 5 }
   },
   {
     brand: "SilencerCo", model: "Velos LBP", camp: "flow",
@@ -336,7 +322,7 @@ const SUPPRESSORS = [
     price: "$1,000 – 1,100", note: "Third major flow-through option.",
     hosts: ["mk18","scar","r308"],
     traits: { quiet: 3, lowbp: 5, light: 3, value: 3, durable: 4 },
-    useFit: { range: 4, hunt: 3, tactical: 5, precision: 3 }
+    useFit: { range: 4, hunt: 3, tactical: 5, precision: 3, nv: 5 }
   },
   {
     brand: "Thunder Beast", model: "Ultra 9 / Magnus", camp: "quiet",
@@ -348,7 +334,7 @@ const SUPPRESSORS = [
     price: "$1,100 – 1,400", note: "Quietest-first; best on the bolt gun.",
     hosts: ["r308"],
     traits: { quiet: 5, lowbp: 2, light: 3, value: 2, durable: 4 },
-    useFit: { range: 3, hunt: 4, tactical: 2, precision: 5 }
+    useFit: { range: 3, hunt: 4, tactical: 2, precision: 5, nv: 3 }
   },
   {
     brand: "Dead Air", model: "Nomad 30", camp: "quiet",
@@ -360,7 +346,7 @@ const SUPPRESSORS = [
     price: "$900 – 1,000", note: "Strong all-rounder, gas-gun friendly.",
     hosts: ["r308","scar","mk18"],
     traits: { quiet: 4, lowbp: 3, light: 4, value: 4, durable: 5 },
-    useFit: { range: 5, hunt: 5, tactical: 4, precision: 4 }
+    useFit: { range: 5, hunt: 5, tactical: 4, precision: 4, nv: 4 }
   },
   {
     brand: "SilencerCo", model: "Omega 300", camp: "quiet",
@@ -372,7 +358,7 @@ const SUPPRESSORS = [
     price: "$850 – 950", note: "Versatile, often best value premium.",
     hosts: ["r308","mk18"],
     traits: { quiet: 4, lowbp: 3, light: 3, value: 5, durable: 5 },
-    useFit: { range: 5, hunt: 4, tactical: 4, precision: 4 }
+    useFit: { range: 5, hunt: 4, tactical: 4, precision: 4, nv: 3 }
   },
   {
     brand: "Otter Creek Labs", model: "Polonium-30", camp: "value",
@@ -384,7 +370,7 @@ const SUPPRESSORS = [
     price: "$650 – 750", note: "Best value; real independent data.",
     hosts: ["r308","mk18"],
     traits: { quiet: 4, lowbp: 3, light: 4, value: 5, durable: 4 },
-    useFit: { range: 5, hunt: 4, tactical: 4, precision: 3 }
+    useFit: { range: 5, hunt: 4, tactical: 4, precision: 3, nv: 3 }
   },
   {
     brand: "SilencerCo", model: "Harvester Evo", camp: "value",
@@ -396,7 +382,7 @@ const SUPPRESSORS = [
     price: "$750 – 850", note: "Lightest; hunting / .308 only.",
     hosts: ["r308"],
     traits: { quiet: 3, lowbp: 3, light: 5, value: 5, durable: 2 },
-    useFit: { range: 3, hunt: 5, tactical: 2, precision: 3 }
+    useFit: { range: 3, hunt: 5, tactical: 2, precision: 3, nv: 2 }
   },
   {
     brand: "Witt Machine", model: "Dirty 30", camp: "budget",
@@ -408,7 +394,7 @@ const SUPPRESSORS = [
     price: "$495 – 595", note: "Shortest option; direct-thread only.",
     hosts: ["mk18","scar","r308"],
     traits: { quiet: 2, lowbp: 3, light: 4, value: 5, durable: 3 },
-    useFit: { range: 4, hunt: 4, tactical: 3, precision: 3 }
+    useFit: { range: 4, hunt: 4, tactical: 3, precision: 3, nv: 3 }
   },
   {
     brand: "Tuna Cans", model: "30 Cal (L / XL)", camp: "budget",
@@ -420,7 +406,7 @@ const SUPPRESSORS = [
     price: "$399 – 499", note: "Serviceable stack; HUB mount.",
     hosts: ["mk18","scar","r308"],
     traits: { quiet: 3, lowbp: 3, light: 2, value: 5, durable: 4 },
-    useFit: { range: 5, hunt: 4, tactical: 3, precision: 3 }
+    useFit: { range: 5, hunt: 4, tactical: 3, precision: 3, nv: 2 }
   }
 ];
 
@@ -467,7 +453,8 @@ const QUESTIONS = [
       { val: "range", t: "Range &amp; general shooting", d: "Mixed plinking, training, fun" },
       { val: "tactical", t: "Defensive / hard use", d: "Carbine, duty-style, higher round counts" },
       { val: "hunt", t: "Hunting", d: "First-shot matters, carried in the field" },
-      { val: "precision", t: "Precision / long range", d: "Bolt gun, accuracy-first" }
+      { val: "precision", t: "Precision / long range", d: "Bolt gun, accuracy-first" },
+      { val: "nv", t: "Night vision / low-light", d: "Shooting under NV — flash &amp; gas signature matter" }
     ]
   },
   {
@@ -665,6 +652,10 @@ function scoreAll() {
     // gentle nudge: independent data is reassuring for a first-timer
     if (s.dbSource === "independent") score += 2;
 
+    // NV / low-light: flash and gas signature in the sightline matter most.
+    // Reward low back pressure (less gas cloud + secondary flash near the tube).
+    if (a.use === "nv") score += t.lowbp * 2.2;
+
     // penalize hunting-only/no-FA cans when hard use is the goal
     if (a.use === "tactical" && s.fa.startsWith("No")) score -= 8;
 
@@ -681,6 +672,7 @@ function reasonFor(s, a) {
   if (a.priority === "value" && s.traits.value >= 4) bits.push("strong performance for the price");
   if (a.use === "hunt" && s.useFit.hunt >= 4) bits.push("well suited to carrying and first-shot hunting");
   if (a.use === "precision" && s.useFit.precision >= 4) bits.push("a precision-shooter favorite");
+  if (a.use === "nv" && s.traits.lowbp >= 4) bits.push("low gas signature keeps your NV tube clear");
   if (s.mountType === "hub") bits.push("HUB mount so it moves easily between rifles");
   if (s.dbSource === "independent") bits.push("backed by independent lab data");
   if (bits.length === 0) bits.push("a solid all-around match for what you told us");
@@ -719,7 +711,7 @@ function showResult() {
       ${runners.map(r => `<div class="runner"><b>${r.brand} ${r.model}</b> — ${r.note} <span style="color:var(--steel)">(${r.price})</span></div>`).join("")}
       <div class="result-actions">
         <button class="qbtn ghost" data-act="restart">Start over</button>
-        <a class="qbtn prime" style="text-decoration:none;" href="mailto:sales@desiarms.com?subject=${encodeURIComponent('Suppressor inquiry — ' + top.model)}">Ask us about the ${top.model}</a>
+        <a class="qbtn prime" style="text-decoration:none;" href="#contact">Ask us about the ${top.model}</a>
       </div>
       <p style="font-size:11.5px;color:var(--steel);margin-top:14px;line-height:1.5;">
         This is a starting point, not gospel — your barrel length, threads, and how you actually shoot all matter.
